@@ -50,4 +50,10 @@ by a continuous vector, leading to deep implications.
 
 Id | Code | Description | Notes | 
 --- | --- | --- | --- |
-e1 | models.py | Baseline - Noticed that initialization is a problem. [Epoch 169/170] [Batch 300/10752] [D_gan loss: 7.971193, acc_gan:   0%] [D_AU_loss loss: nan, au_mse: nan] [G_gan loss: 0.000000, G_AU_loss: 00nan, recon: 00nan] time: 0:55:06.274718 -  | adopted [Xavier normal initializization](http://proceedings.mlr.press/v9/glorot10a/glorot10a.pdf).  |
+e1 | models.py, train_1.py | Baseline - Noticed that initialization is a problem. [Epoch 169/170] [Batch 300/10752] [D_gan loss: 7.971193, acc_gan:   0%] [D_AU_loss loss: nan, au_mse: nan] [G_gan loss: 0.000000, G_AU_loss: 00nan, recon: 00nan] time: 0:55:06.274718 -  | adopted [Xavier normal initializization](http://proceedings.mlr.press/v9/glorot10a/glorot10a.pdf).  |
+e2 | models.py, train_1.py | Anyway, this does not solve the problem. Sometime, it can happen that after some batchs the AU critic loss vanishes   
+[Epoch 0/1000] [Batch 0/336] [D_gan loss: 0.590275, acc_gan:  56%] [D_AU_loss loss: 2.322111, au_mse: 0.204830] [G_gan loss: 0.000000, G_AU_loss: 00nan, recon: 0.466637] time: 0:00:12.726241
+[Epoch 0/1000] [Batch 5/10752] [D_gan loss: 7.971193, acc_gan:   0%] [D_AU_loss loss: nan, au_mse: nan] [G_gan loss: 0.000000, G_AU_loss: 00nan, recon: 00nan] time: 0:00:14.490142  | adopted [Xavier uniform initializization](http://proceedings.mlr.press/v9/glorot10a/glorot10a.pdf). But again it does not solve the problem 
+[Epoch 0/1000] [Batch 0/336] [D_gan loss: 0.743895, acc_gan:  46%] [D_AU_loss loss: 1.356634, au_mse: 0.274911] [G_gan loss: 0.000000, G_AU_loss: 00nan, recon: 0.404357] time: 0:00:12.734658
+[Epoch 0/1000] [Batch 5/10752] [D_gan loss: 7.971193, acc_gan:   0%] [D_AU_loss loss: nan, au_mse: nan] [G_gan loss: 0.000000, G_AU_loss: 00nan, recon: 00nan] time: 0:00:14.497151
+[Epoch 0/1000] [Batch 10/10752] [D_gan loss: 7.971193, acc_gan:   0%] [D_AU_loss loss: nan, au_mse: nan] [G_gan loss: 0.000000, G_AU_loss: 00nan, recon: 00nan] time: 0:00:14.752978 |
