@@ -95,7 +95,7 @@ def build_generator_enc_dec(img_shape,gf,AU_num,channels,num_layers=4,f_size=6,t
     ## transf 
     if tranform_layer:
         tr = Flatten()(u)
-        tr = Dense(c_+AU_num)(tr)
+        tr = Dense(c_+AU_num, kernel_initializer='glorot_normal' )(tr)
         tr = LeakyReLU(alpha=0.2)(tr)
         u = Reshape((1,1,c_+AU_num))(tr)
     ##
@@ -157,13 +157,13 @@ def build_discriminator(img_shape,df,AU_num,num_layers=4,act_multi_label='linear
     #print("flat_repr.get_shape().as_list():",flat_repr.get_shape().as_list())
     #print("flat_repr.get_shape().as_list()[1:]:",flat_repr.get_shape().as_list()[1:])
 
-    gan_logit = Dense(df*2**(num_layers-1))(flat_repr)
+    gan_logit = Dense(df*2**(num_layers-1),kernel_initializer='glorot_normal')(flat_repr)
     gan_logit = LeakyReLU(alpha=0.2)(gan_logit)
     gan_prob = Dense(1, activation='sigmoid')(gan_logit)
 
-    au_logit = Dense(df*2**(num_layers-1))(flat_repr)
+    au_logit = Dense(df*2**(num_layers-1),kernel_initializer='glorot_normal')(flat_repr)
     au_logit = LeakyReLU(alpha=0.2)(au_logit)
-    au_pred = Dense(AU_num, activation=act_multi_label)(au_logit)
+    au_pred = Dense(AU_num, activation=act_multi_label,kernel_initializer='glorot_normal')(au_logit)
 
     return Model(img, [gan_prob,au_pred])
 

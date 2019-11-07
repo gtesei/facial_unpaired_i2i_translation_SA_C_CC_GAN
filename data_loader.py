@@ -71,6 +71,7 @@ class InMemoryDataLoader():
             raise Exception("dataset not supported:"+str(self.dataset_name))
         
         n_images = min(len(self.frame_list),self.max_images) if self.max_images > 0 else len(self.frame_list)
+        print(">loading",n_images,"images ...")
         self.lab_vect = self.lab_vect[:n_images]
         self.img_vect = np.zeros((n_images,
                                  self.img_res[0],
@@ -85,6 +86,10 @@ class InMemoryDataLoader():
                 #img = img/127.5 - 1.
                 img = img/255 - 0.
             self.img_vect[i] = img
+            if i % 100 == 0:
+                print(i,end=' ... ')
+        assert np.sum(np.isnan(self.lab_vect)) == 0 
+        assert np.sum(np.isnan(self.img_vect)) == 0
 
     def load_batch(self, batch_size=1, flip_prob=0, is_testing=False):
         if is_testing:

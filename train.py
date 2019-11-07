@@ -68,7 +68,7 @@ class C_CC_GAN():
                                                             img_res=self.img_shape,
                                                             path_csv=self.csv_path,
                                                             path_image_dir=self.img_path, 
-                                                            max_images=-1)
+                                                            max_images=100)
         # Number of filters in the first layer of G and D
         self.gf = 32
         self.df = 64
@@ -201,12 +201,15 @@ class C_CC_GAN():
 
                     elapsed_time = datetime.datetime.now() - start_time
 
-                    print ("[Epoch %d/%d] [Batch %d/%d] [D_gan loss: %f, acc_gan: %3d%%] [D_AU_loss loss: %f, au_mse: %3d%%] [G_gan loss: %05f, G_AU_loss: %05f, recon: %05f] time: %s " \
-                        % ( epoch, epochs,
-                            batch_i, self.data_loader.n_batches,
-                            d_loss[1],100*d_loss[3],d_loss[2],d_loss[4],
-                            g_loss[1],g_loss[2],g_loss[3],
-                            elapsed_time))
+                    try:
+                        print ("[Epoch %d/%d] [Batch %d/%d] [D_gan loss: %f, acc_gan: %3d%%] [D_AU_loss loss: %f, au_mse: %f] [G_gan loss: %05f, G_AU_loss: %05f, recon: %05f] time: %s " \
+                            % ( epoch, epochs,
+                                batch_i, self.data_loader.n_batches,
+                                d_loss[1],100*d_loss[3],d_loss[2],d_loss[4],
+                                g_loss[1],g_loss[2],g_loss[3],
+                                elapsed_time))
+                    except:
+                        print("*** problem to log ***")
 
                     # log
                     epoch_history.append(epoch) 
