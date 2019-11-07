@@ -68,7 +68,7 @@ class C_CC_GAN():
                                                             img_res=self.img_shape,
                                                             path_csv=self.csv_path,
                                                             path_image_dir=self.img_path, 
-                                                            max_images=100)
+                                                            max_images=-1)
         # Number of filters in the first layer of G and D
         self.gf = 32
         self.df = 64
