@@ -33,7 +33,7 @@ from models import *
 from utils import * 
 
 class C_CC_GAN():
-    def __init__(self, base_path, csv_path, img_path,
+    def __init__(self, base_path, csv_path, img_path, train_size=-1,
         img_rows = 112,img_cols = 112,channels = 3, 
         AU_num=35,
         d_gan_loss_w=1,d_cl_loss_w=1,
@@ -309,6 +309,7 @@ if __name__ == '__main__':
     parser.add_argument('-sample_interval', help='sample interval', dest='sample_interval', type=int, default=200)
     parser.add_argument('-file_path', help='base file path', dest='file_path', type=str, default='datasets/sample/')
     parser.add_argument('-csv_filename', help='csv filename', dest='csv_filename', type=str, default='images.csv')
+    parser.add_argument('-train_size', help='train size [-1 for all train data]', dest='train_size', type=int, default=100)
     parser.add_argument('-images_dir', help='images directory', dest='images_dir', type=str, default='images_aligned')
     args = parser.parse_args()
     
@@ -328,6 +329,7 @@ if __name__ == '__main__':
         base_path = base_path,
         csv_path = csv_path, 
         img_path = img_path, 
+        train_size = args.train_size, 
         AU_num=17,
         d_gan_loss_w=args.d_gan_loss_w,d_cl_loss_w=args.d_cl_loss_w,
         g_gan_loss_w=args.g_gan_loss_w,g_cl_loss_w=args.g_cl_loss_w,

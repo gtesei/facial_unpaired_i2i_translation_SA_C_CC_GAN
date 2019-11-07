@@ -27,10 +27,10 @@ by a continuous vector, leading to deep implications.
     $ sudo pip3 install -r requirements.txt
 
 ## Train
-    $ python ccyclegan_t26.py
+    $ python train.py
     
     # Defaults
-    $ python ccyclegan_t26.py \
+    $ python train.py \
         -d_gan_loss_w 1 \
         -d_cl_loss_w 1 \
         -g_gan_loss_w 2 \
@@ -44,5 +44,10 @@ by a continuous vector, leading to deep implications.
         -sample_interval 200 \
         
     # Usage
-    $ python ccyclegan_t26.py -h
+    $ python train.py -h
     
+## Experiment Log
+
+Id | Code | Description | Notes | 
+--- | --- | --- | --- |
+e1 | models.py | Baseline - Noticed that initialization is a problem. [Epoch 169/170] [Batch 300/10752] [D_gan loss: 7.971193, acc_gan:   0%] [D_AU_loss loss: nan, au_mse: nan] [G_gan loss: 0.000000, G_AU_loss: 00nan, recon: 00nan] time: 0:55:06.274718 - adopted [Xavier normal initializization](http://proceedings.mlr.press/v9/glorot10a/glorot10a.pdf).  |
