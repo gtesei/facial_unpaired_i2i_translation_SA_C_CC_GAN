@@ -150,18 +150,18 @@ def build_discriminator(img_shape,df,AU_num,num_layers=4,act_multi_label='linear
             stride = 2 
         d = d_layer(d, df*2**i,normalization=_norm,f_size=6,strides=stride)
 
-    #flat_repr = Flatten()(d)
+    flat_repr = Flatten()(d)
 
-    validity = Conv2D(1, kernel_size=4, strides=1, padding='same')(d)
+    #validity = Conv2D(1, kernel_size=4, strides=1, padding='same')(d4)
 
     #print("flat_repr.get_shape().as_list():",flat_repr.get_shape().as_list())
     #print("flat_repr.get_shape().as_list()[1:]:",flat_repr.get_shape().as_list()[1:])
 
-    gan_logit = Dense(df*2**(num_layers-1),kernel_initializer='glorot_uniform')(validity)
+    gan_logit = Dense(df*2**(num_layers-1),kernel_initializer='glorot_uniform')(flat_repr)
     gan_logit = LeakyReLU(alpha=0.2)(gan_logit)
-    gan_prob = Dense(1, activation='linear')(gan_logit)
+    gan_prob = Dense(1, activation='sigmoid')(gan_logit)
 
-    au_logit = Dense(df*2**(num_layers-1),kernel_initializer='glorot_uniform')(validity)
+    au_logit = Dense(df*2**(num_layers-1),kernel_initializer='glorot_uniform')(flat_repr)
     au_logit = LeakyReLU(alpha=0.2)(au_logit)
     au_pred = Dense(AU_num, activation=act_multi_label,kernel_initializer='glorot_uniform')(au_logit)
 

@@ -80,7 +80,7 @@ class C_CC_GAN():
         print("******** Discriminator/Classifier ********")
         self.d.summary()
         self.d.compile(loss=[
-            'binary_crossentropy',  # gan
+            'mse',  # gan
             'mse'   # AU regression  
            ],
             optimizer=optimizer,
@@ -125,7 +125,7 @@ class C_CC_GAN():
         self.combined = Model(inputs=[img,label0,label1],
                               outputs=[ gan_valid, AU_valid, 
                                         reconstr])
-        self.combined.compile(loss=['binary_crossentropy','mse',
+        self.combined.compile(loss=['mse','mse',
                                     'mae'],
                             loss_weights=[  
                             self.g_gan_loss_w ,                 # g_loss gan 
