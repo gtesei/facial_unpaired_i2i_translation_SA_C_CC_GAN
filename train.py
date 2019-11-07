@@ -84,7 +84,7 @@ class C_CC_GAN():
             'mse'   # AU regression  
            ],
             optimizer=optimizer,
-            metrics=['accuracy','mean_squared_error'],
+            metrics=['mse','mse'],
             loss_weights=[
             self.d_gan_loss_w , # gan
             self.d_cl_loss_w   # AU regression  
@@ -97,7 +97,7 @@ class C_CC_GAN():
 
         # Build the generators
         self.g_enc , self.g_dec = build_generator_enc_dec(img_shape=self.img_shape,gf=64,AU_num=self.AU_num,channels=self.channels,
-                                                          tranform_layer=True)
+                                                          tranform_layer=False)
         print("******** Generator_ENC ********")
         self.g_enc.summary()
         print("******** Generator_DEC ********")
@@ -134,7 +134,7 @@ class C_CC_GAN():
                             ],
                             optimizer=optimizer)
 
-    def train(self, epochs, batch_size=1, sample_interval=50 , d_g_ratio=5):
+    def train(self, epochs, batch_size=1, sample_interval=50 , d_g_ratio=1):
 
         start_time = datetime.datetime.now()
         # logs 
@@ -149,7 +149,17 @@ class C_CC_GAN():
 
         for epoch in range(epochs):
             for batch_i, (labels0 , imgs) in enumerate(self.data_loader.load_batch(batch_size=batch_size)):
-                des_au = self.data_loader.gen_rand_cond(batch_size=batch_size)
+                des_au_1 = self.data_loader.gen_rand_cond(batch_size=batch_size)
+                des_au_2 = self.data_loader.gen_rand_cond(batch_size=batch_size)
+                des_au_3 = self.data_loader.gen_rand_cond(batch_size=batch_size)
+                des_au_4 = self.data_loader.gen_rand_cond(batch_size=batch_size)
+                des_au_5 = self.data_loader.gen_rand_cond(batch_size=batch_size)
+                #
+                des_au_6 = self.data_loader.gen_rand_cond(batch_size=batch_size)
+                des_au_7 = self.data_loader.gen_rand_cond(batch_size=batch_size)
+                des_au_8 = self.data_loader.gen_rand_cond(batch_size=batch_size) 
+                des_au_9 = self.data_loader.gen_rand_cond(batch_size=batch_size)
+                des_au_10 = self.data_loader.gen_rand_cond(batch_size=batch_size)
                 
                 # ----------------------
                 #  Train Discriminators
@@ -157,13 +167,24 @@ class C_CC_GAN():
 
                 # Translate images to opposite domain
                 zs1,zs2,zs3,zs4 = self.g_enc.predict(imgs)
-                fakes_1 = self.g_dec.predict([zs1,zs2,zs3,zs4,des_au])
+                fakes_1 = self.g_dec.predict([zs1,zs2,zs3,zs4,des_au_1])
+                fakes_2 = self.g_dec.predict([zs1,zs2,zs3,zs4,des_au_2])
+                fakes_3 = self.g_dec.predict([zs1,zs2,zs3,zs4,des_au_3])
+                fakes_4 = self.g_dec.predict([zs1,zs2,zs3,zs4,des_au_4])
+                fakes_5 = self.g_dec.predict([zs1,zs2,zs3,zs4,des_au_5])
+                #
+                fakes_6 = self.g_dec.predict([zs1,zs2,zs3,zs4,des_au_6])
+                fakes_7 = self.g_dec.predict([zs1,zs2,zs3,zs4,des_au_7])
+                fakes_8 = self.g_dec.predict([zs1,zs2,zs3,zs4,des_au_8])
+                fakes_9 = self.g_dec.predict([zs1,zs2,zs3,zs4,des_au_9])
+                fakes_10 = self.g_dec.predict([zs1,zs2,zs3,zs4,des_au_10])
 
+            
                 # Train the discriminators (original images = real / translated = Fake)
-                idx = np.random.permutation(2*labels0.shape[0])
-                all_au = np.concatenate([labels0,des_au])
-                all_imgs = np.concatenate([imgs,fakes_1])
-                gan_labels = np.concatenate([valid,fake])
+                idx = np.random.permutation(11*labels0.shape[0])
+                all_au = np.concatenate([labels0,des_au_1,des_au_2,des_au_3,des_au_4,des_au_5,des_au_6,des_au_7,des_au_8,des_au_9,des_au_10])
+                all_imgs = np.concatenate([imgs,fakes_1,fakes_2,fakes_3,fakes_4,fakes_5,fakes_6,fakes_7,fakes_8,fakes_9,fakes_10])
+                gan_labels = np.concatenate([valid,fake,fake,fake,fake,fake,fake,fake,fake,fake,fake])
                 # shuffle 
                 all_au = all_au[idx]
                 all_imgs = all_imgs[idx]
@@ -177,17 +198,14 @@ class C_CC_GAN():
                     #  Train Generators
                     # ------------------
                     _imgs = np.concatenate([
-                        imgs])
+                        imgs, imgs, imgs, imgs, imgs, imgs, imgs, imgs, imgs, imgs])
 
-                    _labels0_cat = np.concatenate([
-                        labels0])
+                    _labels0_cat = np.concatenate([labels0, labels0, labels0, labels0, labels0, labels0, labels0, labels0, labels0, labels0])
 
-                    _labels1_all_other = np.concatenate([
-                        des_au])
+                    _labels1_all_other = np.concatenate([des_au_1,des_au_2,des_au_3,des_au_4,des_au_5,des_au_6,des_au_7,des_au_8,des_au_9,des_au_10])
 
                     # I know this should be outside the loop; left here to make code more understandable 
-                    _valid = np.concatenate([
-                        valid])
+                    _valid = np.concatenate([valid,valid,valid,valid,valid,valid,valid,valid,valid,valid])
 
                     idx = np.random.permutation(_imgs.shape[0])
                     _imgs = _imgs[idx]
