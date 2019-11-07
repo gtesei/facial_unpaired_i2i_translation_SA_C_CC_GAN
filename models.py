@@ -161,14 +161,14 @@ def build_discriminator(img_shape,df,AU_num,num_layers=4,act_multi_label='linear
     gan_logit = LeakyReLU(alpha=0.2)(gan_logit)
     gan_prob = Dense(1, activation='sigmoid')(gan_logit)
 
-    class_logit = Dense(df*2**(num_layers-1))(flat_repr)
-    class_logit = LeakyReLU(alpha=0.2)(class_logit)
-    class_prob = Dense(AU_num, activation=act_multi_label)(class_logit)
+    au_logit = Dense(df*2**(num_layers-1))(flat_repr)
+    au_logit = LeakyReLU(alpha=0.2)(au_logit)
+    au_pred = Dense(AU_num, activation=act_multi_label)(au_logit)
 
-    return Model(img, [gan_prob,class_prob])
+    return Model(img, [gan_prob,au_pred])
 
 if __name__ == '__main__':
-    d = build_discriminator(img_shape=(112,112,3),df=64,AU_num=35)
+    d = build_discriminator(img_shape=(112,112,3),df=64,AU_num=17)
     optimizer = Adam(0.0002, 0.5) 
     print("******** Discriminator/Classifier ********")
     d.summary()
@@ -177,7 +177,7 @@ if __name__ == '__main__':
               metrics=['accuracy','mean_squared_error'],
               loss_weights=[1, 1])
     g_enc , g_dec = build_generator_enc_dec(img_shape=(112,112,3),gf=64,
-                                            AU_num=35,channels=3,tranform_layer=True)
+                                            AU_num=17,channels=3,tranform_layer=True)
     print("******** Generator_ENC ********")
     g_enc.summary()
     print("******** Generator_DEC ********")

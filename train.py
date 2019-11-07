@@ -22,13 +22,15 @@ import pandas as pd
 import os
 import random 
 
+import warnings
 import tensorflow as tf 
 
 from keras.utils import to_categorical
 import argparse
 from sklearn.metrics import accuracy_score
 
-from  models import *
+from models import *
+from utils import * 
 
 class C_CC_GAN():
     def __init__(self, base_path, csv_path, img_path,
@@ -66,7 +68,7 @@ class C_CC_GAN():
                                                             img_res=self.img_shape,
                                                             path_csv=self.csv_path,
                                                             path_image_dir=self.img_path, 
-                                                            max_images=12)
+                                                            max_images=100)
         # Number of filters in the first layer of G and D
         self.gf = 32
         self.df = 64
@@ -131,50 +133,23 @@ class C_CC_GAN():
                             self.rec_loss_w                     # reconstruction loss
                             ],
                             optimizer=optimizer)
-    
-    def generate_new_labels(self,labels0):
-        labels1 = [] 
-        for i in range(len(labels0)):
-            allowed_values = list(range(0, self.AU_num))
-            allowed_values.remove(labels0[i])
-            labels1.append(random.choice(allowed_values))
-        return np.array(labels1,'int32')
-    
-    def generate_new_labels_all(self,labels0):
-        labels_all = [] 
-        for i in range(len(labels0)):
-            allowed_values = list(range(0, self.AU_num))
-            allowed_values.remove(labels0[i])
-            labels_all.append(np.array(allowed_values,'int32'))
-        return np.array(labels_all,'int32')
 
     def train(self, epochs, batch_size=1, sample_interval=50 , d_g_ratio=5):
 
         start_time = datetime.datetime.now()
         # logs 
         epoch_history, batch_i_history,  = [] , []   
-        d_gan_loss_history, d_gan_accuracy_history, d_cl_loss_history, d_cl_accuracy_history = [], [], [], [] 
-        g_gan_loss_history, g_cl_loss_history = [] , [] 
+        d_gan_loss_history, d_gan_accuracy_history, d_au_loss_history, d_au_mse_history = [], [], [], [] 
+        g_gan_loss_history, g_au_loss_history = [] , [] 
         reconstr_history = [] 
 
         # Adversarial loss ground truths
         valid = np.ones((batch_size,1) )
         fake = np.zeros((batch_size,1) )
 
-        null_labels = np.zeros((batch_size,7) )
-
         for epoch in range(epochs):
             for batch_i, (labels0 , imgs) in enumerate(self.data_loader.load_batch(batch_size=batch_size)):
-                labels1_all = self.generate_new_labels_all(labels0)
-
-                labels0_cat = to_categorical(labels0, AU_num=self.AU_num)
-                #
-                labels1_all_1 = to_categorical(labels1_all[:,0], AU_num=self.AU_num)
-                labels1_all_2 = to_categorical(labels1_all[:,1], AU_num=self.AU_num)
-                labels1_all_3 = to_categorical(labels1_all[:,2], AU_num=self.AU_num)
-                labels1_all_4 = to_categorical(labels1_all[:,3], AU_num=self.AU_num)
-                labels1_all_5 = to_categorical(labels1_all[:,4], AU_num=self.AU_num)
-                labels1_all_6 = to_categorical(labels1_all[:,5], AU_num=self.AU_num)
+                des_au = self.data_loader.gen_rand_cond(batch_size=batch_size)
                 
                 # ----------------------
                 #  Train Discriminators
@@ -182,35 +157,19 @@ class C_CC_GAN():
 
                 # Translate images to opposite domain
                 zs1,zs2,zs3,zs4 = self.g_enc.predict(imgs)
-                fakes_1 = self.g_dec.predict([zs1,zs2,zs3,zs4,labels1_all_1])
-                fakes_2 = self.g_dec.predict([zs1,zs2,zs3,zs4,labels1_all_2])
-                fakes_3 = self.g_dec.predict([zs1,zs2,zs3,zs4,labels1_all_3])
-                fakes_4 = self.g_dec.predict([zs1,zs2,zs3,zs4,labels1_all_4])
-                fakes_5 = self.g_dec.predict([zs1,zs2,zs3,zs4,labels1_all_5])
-                fakes_6 = self.g_dec.predict([zs1,zs2,zs3,zs4,labels1_all_6])
+                fakes_1 = self.g_dec.predict([zs1,zs2,zs3,zs4,des_au])
 
                 # Train the discriminators (original images = real / translated = Fake)
-                idx = np.random.permutation(self.num_classes*labels0.shape[0])
-                _labels_cat = np.concatenate([labels0_cat,
-                                              null_labels,
-                                              null_labels,
-                                              null_labels,
-                                              null_labels,
-                                              null_labels,
-                                              null_labels])
-                _imgs = np.concatenate([imgs,
-                                        fakes_1,
-                                        fakes_2,
-                                        fakes_3,
-                                        fakes_4,
-                                        fakes_5,
-                                        fakes_6])
-                _vf = np.concatenate([valid,fake,fake,fake,fake,fake,fake])
-                _labels_cat = _labels_cat[idx]
-                _imgs = _imgs[idx]
-                _vf = _vf[idx]
+                idx = np.random.permutation(2*labels0.shape[0])
+                all_au = np.concatenate([labels0,des_au])
+                all_imgs = np.concatenate([imgs,fakes_1])
+                gan_labels = np.concatenate([valid,fake])
+                # shuffle 
+                all_au = all_au[idx]
+                all_imgs = all_imgs[idx]
+                gan_labels = gan_labels[idx]
 
-                d_loss  = self.d.train_on_batch(_imgs, [_vf,_labels_cat])
+                d_loss  = self.d.train_on_batch(all_imgs, [gan_labels,all_au])
 
                 if batch_i % d_g_ratio == 0:
 
@@ -218,39 +177,19 @@ class C_CC_GAN():
                     #  Train Generators
                     # ------------------
                     _imgs = np.concatenate([
-                        imgs,
-                        imgs,
-                        imgs,
-                        imgs,
-                        imgs,
                         imgs])
 
                     _labels0_cat = np.concatenate([
-                        labels0_cat,
-                        labels0_cat,
-                        labels0_cat,
-                        labels0_cat,
-                        labels0_cat,
-                        labels0_cat])
+                        labels0])
 
                     _labels1_all_other = np.concatenate([
-                        labels1_all_1, 
-                        labels1_all_2,
-                        labels1_all_3,
-                        labels1_all_4,
-                        labels1_all_5,
-                        labels1_all_6])
+                        des_au])
 
                     # I know this should be outside the loop; left here to make code more understandable 
                     _valid = np.concatenate([
-                        valid,
-                        valid,
-                        valid,
-                        valid,
-                        valid,
                         valid])
 
-                    idx = np.random.permutation((self.num_classes-1)*labels0.shape[0])
+                    idx = np.random.permutation(_imgs.shape[0])
                     _imgs = _imgs[idx]
                     _labels0_cat = _labels0_cat[idx]
                     _labels1_all_other = _labels1_all_other[idx]
@@ -262,10 +201,10 @@ class C_CC_GAN():
 
                     elapsed_time = datetime.datetime.now() - start_time
 
-                    print ("[Epoch %d/%d] [Batch %d/%d] [D_gan loss: %f, acc_gan: %3d%%] [D_cl loss: %f, acc_cl: %3d%%] [G_gan loss: %05f, G_cl: %05f, recon: %05f] time: %s " \
+                    print ("[Epoch %d/%d] [Batch %d/%d] [D_gan loss: %f, acc_gan: %3d%%] [D_AU_loss loss: %f, au_mse: %3d%%] [G_gan loss: %05f, G_AU_loss: %05f, recon: %05f] time: %s " \
                         % ( epoch, epochs,
                             batch_i, self.data_loader.n_batches,
-                            d_loss[1],100*d_loss[3],d_loss[2],100*d_loss[4],
+                            d_loss[1],100*d_loss[3],d_loss[2],d_loss[4],
                             g_loss[1],g_loss[2],g_loss[3],
                             elapsed_time))
 
@@ -274,10 +213,10 @@ class C_CC_GAN():
                     batch_i_history.append(batch_i)
                     d_gan_loss_history.append(d_loss[1])
                     d_gan_accuracy_history.append(100*d_loss[3])
-                    d_cl_loss_history.append(d_loss[2])
-                    d_cl_accuracy_history.append(100*d_loss[4])
+                    d_au_loss_history.append(d_loss[2])
+                    d_au_mse_history.append(100*d_loss[4])
                     g_gan_loss_history.append(g_loss[1])
-                    g_cl_loss_history.append(g_loss[2])
+                    g_au_loss_history.append(g_loss[2])
                     reconstr_history.append(g_loss[3])
 
                 # If at save interval => save generated image samples
@@ -290,98 +229,66 @@ class C_CC_GAN():
                         'batch': batch_i_history, 
                         'd_gan_loss': d_gan_loss_history, 
                         'd_gan_accuracy' : d_gan_accuracy_history,
-                        'd_cl_loss': d_cl_loss_history, 
-                        'd_cl_accuracy': d_cl_accuracy_history, 
+                        'd_AU_loss': d_au_loss_history, 
+                        'd_AU_MSE': d_au_mse_history, 
                         'g_gan_loss': g_gan_loss_history, 
-                        'g_cl_loss': g_cl_loss_history, 
+                        'g_AU_loss': g_au_loss_history, 
                         'reconstr_loss': reconstr_history
                     })
                     train_history.to_csv(str(sys.argv[0]).split('.')[0]+'_train_log.csv',index=False)
 
-    def sample_images(self, epoch, batch_i, use_leo=False):
-        ## disc
-        labels0_d , imgs_d = self.data_loader.load_data(batch_size=64, is_testing=True)
-
-        gan_pred_prob,class_pred_prob = self.d.predict(imgs_d)
-        
-        gan_pred = (gan_pred_prob > 0.5)*1.0
-        gan_pred = gan_pred.reshape((64,))
-        
-        class_pred = np.argmax(class_pred_prob,axis=1)
-
-        gan_test_accuracy = accuracy_score(y_true=np.ones(64), y_pred=gan_pred)
-        class_test_accuracy = accuracy_score(y_true=labels0_d, y_pred=class_pred)
-
-        print("*** TEST *** [D_gan accuracy   :",gan_test_accuracy,"] [D_cl accuracy :",class_test_accuracy,"]")
-
-        ## gen         
-        if use_leo:
-            labels0_ , imgs_ = self.data_loader.load_leo()
-        else:
-            labels0_ , imgs_ = self.data_loader.load_data(batch_size=1, is_testing=True)
-        labels1_all = self.generate_new_labels_all(labels0_)
-
-        labels0_cat = to_categorical(labels0_, num_classes=self.num_classes)
-        labels1_all_1 = to_categorical(labels1_all[:,0], num_classes=self.num_classes)
-        labels1_all_2 = to_categorical(labels1_all[:,1], num_classes=self.num_classes)
-        labels1_all_3 = to_categorical(labels1_all[:,2], num_classes=self.num_classes)
-        labels1_all_4 = to_categorical(labels1_all[:,3], num_classes=self.num_classes)
-        labels1_all_5 = to_categorical(labels1_all[:,4], num_classes=self.num_classes)
-        labels1_all_6 = to_categorical(labels1_all[:,5], num_classes=self.num_classes)
-
-        # Translate images 
-        zs1_,zs2_,zs3_,zs4_ = self.g_enc.predict(imgs_)
-        fake_1 = self.g_dec.predict([zs1_,zs2_,zs3_,zs4_,labels1_all_1])
-        fake_2 = self.g_dec.predict([zs1_,zs2_,zs3_,zs4_,labels1_all_2])
-        fake_3 = self.g_dec.predict([zs1_,zs2_,zs3_,zs4_,labels1_all_3])
-        fake_4 = self.g_dec.predict([zs1_,zs2_,zs3_,zs4_,labels1_all_4])
-        fake_5 = self.g_dec.predict([zs1_,zs2_,zs3_,zs4_,labels1_all_5])
-        fake_6 = self.g_dec.predict([zs1_,zs2_,zs3_,zs4_,labels1_all_6])
-      
-        # Reconstruct image 
-        reconstr_ = self.g_dec.predict([zs1_,zs2_,zs3_,zs4_,labels0_cat])
-
-        gen_imgs = np.concatenate([imgs_, 
-                                   fake_1, 
-                                   fake_2, 
-                                   fake_3, 
-                                   fake_4, 
-                                   fake_5, 
-                                   fake_6,
-                                   reconstr_])
-
-        # Rescale images 0 - 1
-        gen_imgs = 0.5 * gen_imgs + 0.5
-
-        titles = ['Orig:'+str(self.lab_dict[labels0_.item(0)]), 
-                  'Trans:'+str(self.lab_dict[labels1_all[:,0].item(0)]),
-                  'Trans:'+str(self.lab_dict[labels1_all[:,1].item(0)]),
-                  'Trans:'+str(self.lab_dict[labels1_all[:,2].item(0)]),
-                  'Trans:'+str(self.lab_dict[labels1_all[:,3].item(0)]),
-                  'Trans:'+str(self.lab_dict[labels1_all[:,4].item(0)]),
-                  'Trans:'+str(self.lab_dict[labels1_all[:,5].item(0)]),
-                  'Reconstr.']
-        r, c = 2, 4
-        fig, axs = plt.subplots(r, c)
-        
-        plt.subplots_adjust(hspace=0)
-
-        if not os.path.exists( "images/%s/"% (self.dataset_name)):
-            os.makedirs( "images/%s/"% (self.dataset_name)  )
-        
-        cnt = 0
-        for i in range(r):
-            for j in range(c):
-                axs[i,j].imshow(gen_imgs[cnt].reshape((self.img_rows,self.img_cols)),cmap='gray')
-                axs[i,j].set_title(titles[cnt])
-                axs[i,j].axis('off')
-                cnt += 1
-
-        if use_leo:
-            fig.savefig("images/%s/%d_%d_leo.png" % (self.dataset_name, epoch, batch_i))
-        else:
-            fig.savefig("images/%s/%d_%d.png" % (self.dataset_name, epoch, batch_i))
-        plt.close()
+    def sample_images(self, epoch, batch_i):
+        for labels0_d , imgs_d in self.data_loader.load_batch(batch_size=1):
+            ## disc
+            gan_pred_prob,au_prob = self.d.predict(imgs_d)
+            
+            # Translate images 
+            zs1_,zs2_,zs3_,zs4_ = self.g_enc.predict(imgs_d)
+            
+            # Reconstruct image 
+            reconstr_ = self.g_dec.predict([zs1_,zs2_,zs3_,zs4_,labels0_d])
+            
+            ## save reconstraction 
+            if not os.path.exists('log_images'):
+                os.makedirs('log_images')
+            #plot    
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                plot_grid(np.concatenate([imgs_d, reconstr_]), 
+                          row_titles=None, 
+                          col_titles=["Orig.[ep:%d]" % (epoch),'Reconstr.'],
+                          nrow = 1,ncol = 2,
+                          save_filename="log_images/reconstr_%d_%d.png" % (epoch, batch_i))
+            ####
+            n_row = 4 # alpha 
+            n_col = 9 # AUs 
+            col_names = ['AU1_r','AU2_r','AU4_r','AU5_r','AU10_r',
+                         'AU12_r','AU15_r','AU25_r','AU45_r']
+            col_idx = [0,1,2,3,7,8,10,14,16] 
+            assert len(col_names) == len(col_idx)
+            alphas = [0,.33,.66,1]
+            au_grid = np.repeat(labels0_d,n_row*n_col,axis=0)
+            img_tens = np.repeat(imgs_d,n_row*n_col,axis=0)
+            n = 0 
+            for r in range(n_row):
+                for c in range(n_col):
+                    au_n = au_grid[[n],:]
+                    au_n[0,col_idx[c]] = alphas[r]
+                    #
+                    act_au = self.g_dec.predict([zs1_,zs2_,zs3_,zs4_,au_n])
+                    img_tens[n,:] = act_au
+                    n += 1 
+            #plot    
+            col_names_plot = ['AU1','AU2','AU4','AU5','AU10',
+                         'AU12','AU15','AU25','AU45']
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                plot_grid(img_tens, 
+                          row_titles=alphas, 
+                          col_titles=col_names_plot,
+                          nrow = n_row,ncol = n_col,
+                          save_filename="log_images/au_edition_%d_%d.png" % (epoch, batch_i))
+            break 
 
 
 if __name__ == '__main__':
@@ -395,10 +302,10 @@ if __name__ == '__main__':
     parser.add_argument('-adam_beta_1', help='Adam beta-1', dest='adam_beta_1', type=float, default=0.5)
     parser.add_argument('-adam_beta_2', help='Adam beta-2', dest='adam_beta_2', type=float, default=0.999)
     parser.add_argument('-epochs', help='N. epochs', dest='epochs', type=int, default=170)
-    parser.add_argument('-batch_size', help='batch size', dest='batch_size', type=int, default=64)
+    parser.add_argument('-batch_size', help='batch size', dest='batch_size', type=int, default=32)
     parser.add_argument('-sample_interval', help='sample interval', dest='sample_interval', type=int, default=200)
     parser.add_argument('-file_path', help='base file path', dest='file_path', type=str, default='datasets/sample/')
-    parser.add_argument('-csv_filename', help='csv filename', dest='csv_filename', type=str, default='csv_filename')
+    parser.add_argument('-csv_filename', help='csv filename', dest='csv_filename', type=str, default='images.csv')
     parser.add_argument('-images_dir', help='images directory', dest='images_dir', type=str, default='images_aligned')
     args = parser.parse_args()
     
@@ -418,6 +325,7 @@ if __name__ == '__main__':
         base_path = base_path,
         csv_path = csv_path, 
         img_path = img_path, 
+        AU_num=17,
         d_gan_loss_w=args.d_gan_loss_w,d_cl_loss_w=args.d_cl_loss_w,
         g_gan_loss_w=args.g_gan_loss_w,g_cl_loss_w=args.g_cl_loss_w,
         rec_loss_w=args.rec_loss_w,
