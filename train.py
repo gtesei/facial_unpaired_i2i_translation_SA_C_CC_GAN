@@ -313,7 +313,7 @@ class C_CC_GAN():
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Train CCycleGAN')
+    parser = argparse.ArgumentParser(description='Train')
     parser.add_argument('-d_gan_loss_w', help='loss weight for discrim. real/fake', dest='d_gan_loss_w', type=int, default=1)
     parser.add_argument('-d_cl_loss_w', help='loss weight for discrim. multiclass', dest='d_cl_loss_w', type=int, default=1)
     parser.add_argument('-g_gan_loss_w', help='loss weight for gen. real/fake', dest='g_gan_loss_w', type=int, default=2)
