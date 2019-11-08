@@ -33,7 +33,7 @@ from models import *
 from utils import * 
 
 class C_CC_GAN():
-    def __init__(self, base_path, csv_path, img_path, train_size=-1,
+    def __init__(self, root_data_path, train_size=-1,
         img_rows = 112,img_cols = 112,channels = 3, 
         AU_num=35,
         d_gan_loss_w=1,d_cl_loss_w=1,
@@ -41,9 +41,7 @@ class C_CC_GAN():
         rec_loss_w=1,
         adam_lr=0.0002,adam_beta_1=0.5,adam_beta_2=0.999):
         # paths 
-        self.base_path = base_path
-        self.csv_path = csv_path
-        self.img_path = img_path
+        self.root_data_path = root_data_path 
         # Input shape
         self.img_rows = img_rows
         self.img_cols = img_cols
@@ -66,8 +64,7 @@ class C_CC_GAN():
         # Configure data loader
         self.data_loader = InMemoryDataLoader(dataset_name='EmotioNet',
                                                             img_res=self.img_shape,
-                                                            path_csv=self.csv_path,
-                                                            path_image_dir=self.img_path, 
+                                                            root_data_path=self.root_data_path,
                                                             max_images=train_size)
         # Number of filters in the first layer of G and D
         self.gf = 32
@@ -324,10 +321,9 @@ if __name__ == '__main__':
     parser.add_argument('-adam_beta_2', help='Adam beta-2', dest='adam_beta_2', type=float, default=0.999)
     parser.add_argument('-epochs', help='N. epochs', dest='epochs', type=int, default=170)
     parser.add_argument('-batch_size', help='batch size', dest='batch_size', type=int, default=32)
-    parser.add_argument('-sample_interval', help='sample interval', dest='sample_interval', type=int, default=200)
-    parser.add_argument('-file_path', help='base file path', dest='file_path', type=str, default='datasets/sample/')
-    parser.add_argument('-csv_filename', help='csv filename', dest='csv_filename', type=str, default='images.csv')
-    parser.add_argument('-train_size', help='train size [-1 for all train data]', dest='train_size', type=int, default=100)
+    parser.add_argument('-sample_interval', help='sample interval', dest='sample_interval', type=int, default=1000)
+    parser.add_argument('-root_data_path', help='base file path', dest='root_data_path', type=str, default='datasets')
+    parser.add_argument('-train_size', help='train size [-1 for all train data]', dest='train_size', type=int, default=-1)
     parser.add_argument('-images_dir', help='images directory', dest='images_dir', type=str, default='images_aligned')
     args = parser.parse_args()
     
@@ -340,13 +336,9 @@ if __name__ == '__main__':
     print('-' * 30)
 
     # GAN 
-    base_path = os.path.abspath(os.path.dirname(args.file_path))
-    csv_path = os.path.join(*[base_path,args.csv_filename])
-    img_path = os.path.join(*[base_path,args.images_dir])
+    root_data_path = args.root_data_path
     gan = C_CC_GAN(
-        base_path = base_path,
-        csv_path = csv_path, 
-        img_path = img_path, 
+        root_data_path = root_data_path,
         train_size = args.train_size, 
         AU_num=17,
         d_gan_loss_w=args.d_gan_loss_w,d_cl_loss_w=args.d_cl_loss_w,

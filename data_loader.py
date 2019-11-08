@@ -105,10 +105,11 @@ class InMemoryDataLoader():
             print(">>> found",len(im_dirs),"directories::",im_dirs)
             for k in range(len(im_dirs)):
                 im_dir = im_dirs[k]
-                print(k,"===============>>",im_dir)
-                lab_vect, img_vect = self._process_data_dir(im_dir)
-                lab_vect_list.append(lab_vect)
-                img_vect_list.append(img_vect)
+                if im_dir != '.git':
+                    print(k,"===============>>",im_dir)
+                    lab_vect, img_vect = self._process_data_dir(im_dir)
+                    lab_vect_list.append(lab_vect)
+                    img_vect_list.append(img_vect)
                 
             ##
             self.lab_vect = np.concatenate(lab_vect_list,axis=0)
