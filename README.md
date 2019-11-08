@@ -46,6 +46,13 @@ by a continuous vector, leading to deep implications.
     # Usage
     $ python train.py -h
     
+## Dataset 
+We adopt [EmotioNet](https://ieeexplore.ieee.org/abstract/document/7780969), which consists in over 1 million images of facial expressions with associated 
+emotion keywords from the Internet and automatically annotated with Action Units (AU). The dataset is re-processed and re-annotated with [OpenFace](https://cmusatyalab.github.io/openface/) to obtain cropped facial images and related AU annotations.
+
+<img src="images/EmotioNet2OpenFace.PNG" align="center" /> 
+
+
 ## Experiment Log
 
 Id | Code | Description | Notes | 
