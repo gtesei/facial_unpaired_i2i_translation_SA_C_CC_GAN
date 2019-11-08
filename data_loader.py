@@ -6,7 +6,9 @@ import matplotlib.pyplot as plt
 import os 
 import cv2
 from utils import * 
-    
+from os import listdir 
+from os.path import isfile, join, isdir     
+
 def get_00000_num(num):
     if num < 10:
         return '00000'+str(num)
@@ -27,8 +29,8 @@ class InMemoryDataLoader():
     def __init__(self, 
                  dataset_name, 
                  img_res=(112, 112,3),
-                 path_csv=None,
-                 path_image_dir=None, 
+                 root_data_path=None,
+#                 path_image_dir=None, 
                  normalize=True,
 #                 csv_columns = ['frame',  'AU01_r', 'AU02_r', 'AU04_r', 'AU05_r', 'AU06_r', 'AU07_r', 'AU09_r', 'AU10_r', 
 #                                   'AU12_r', 'AU14_r', 'AU15_r', 'AU17_r', 'AU20_r', 'AU23_r', 'AU25_r', 'AU26_r', 'AU45_r', 
@@ -40,8 +42,9 @@ class InMemoryDataLoader():
                  image_patter_fn = 'frame_det_00_FRAME_ID.bmp'):
         self.dataset_name = dataset_name
         self.img_res = img_res
-        self.path_csv = path_csv 
-        self.path_image_dir = path_image_dir 
+        self.root_data_path = root_data_path
+        #self.path_csv = path_csv 
+        #self.path_image_dir = path_image_dir 
         self.csv_columns = csv_columns
         self.max_images = max_images
         self.image_patter_fn = image_patter_fn # image_patter_fn.replace('FRAME_ID','1')
@@ -55,41 +58,64 @@ class InMemoryDataLoader():
         cond = self.lab_vect[idx]
         cond += np.random.uniform(-0.1, 0.1, cond.shape)
         return cond
-        
-    def _load_internally(self):
-        print(">> loading "+str(self.dataset_name)+" ...") 
-        
-        if self.dataset_name == 'EmotioNet':
-            labels = pd.read_csv(self.path_csv)
-            labels.columns = [i.strip() for i in labels.columns]
-            labels = labels[self.csv_columns]
-            self.frame_list = labels.iloc[:,0].tolist()
-            self.lab_vect = labels.iloc[:,1:].to_numpy()
-            assert len(self.frame_list) == len(self.lab_vect)
-            #labels.mean(axis=1)
-        else:
-            raise Exception("dataset not supported:"+str(self.dataset_name))
-        
-        n_images = min(len(self.frame_list),self.max_images) if self.max_images > 0 else len(self.frame_list)
+    
+    def _process_data_dir(self, 
+                          im_dir, 
+                          other_dir='processed', 
+                          csv_fn='EmotioNet.csv', 
+                          img_dirn='EmotioNet_aligned'):
+        labels = pd.read_csv(join(self.root_data_path,im_dir,other_dir,csv_fn))
+        labels.columns = [i.strip() for i in labels.columns]
+        print(">> removing",np.sum(labels['success']==0),"images [success==0] ...")
+        labels = labels[labels['success']==1]
+        labels = labels[self.csv_columns]
+        labels.reset_index(inplace=True,drop=True)
+        frame_list = labels.iloc[:,0].tolist()
+        lab_vect = labels.iloc[:,1:].to_numpy()
+        assert len(frame_list) == len(lab_vect)
+        #
+        n_images = min(len(frame_list),self.max_images) if self.max_images > 0 else len(frame_list)
         print(">loading",n_images,"images ...")
-        self.lab_vect = self.lab_vect[:n_images]
-        self.img_vect = np.zeros((n_images,
+        lab_vect = lab_vect[:n_images]
+        img_vect = np.zeros((n_images,
                                  self.img_res[0],
                                  self.img_res[1],
                                  self.img_res[2]) , 'float32')
-        
-        
         for i in range(n_images):
-            img_path = os.path.join(*[self.path_image_dir,self.image_patter_fn.replace('FRAME_ID',get_00000_num(self.frame_list[i]))])
+            img_path = os.path.join(*[self.root_data_path,im_dir,other_dir,img_dirn,
+                                      self.image_patter_fn.replace('FRAME_ID',get_00000_num(frame_list[i]))])
             img = read_cv2_img(img_path)
             if self.normalize:
                 #img = img/127.5 - 1.
                 img = img/255 - 0.
-            self.img_vect[i] = img
+            img_vect[i] = img
             if i % 100 == 0:
                 print(i,end=' ... ')
-        assert np.sum(np.isnan(self.lab_vect)) == 0 
-        assert np.sum(np.isnan(self.img_vect)) == 0
+        #
+        assert np.sum(np.isnan(lab_vect)) == 0 
+        assert np.sum(np.isnan(img_vect)) == 0
+        #
+        return lab_vect, img_vect
+                
+    def _load_internally(self):
+        print(">> loading "+str(self.dataset_name)+" ...") 
+        if self.dataset_name == 'EmotioNet':
+            lab_vect_list , img_vect_list = [] , [] 
+            im_dirs = [d for d in listdir(self.root_data_path) if isdir(join(self.root_data_path,d))]
+            print(">>> found",len(im_dirs),"directories::",im_dirs)
+            for k in range(len(im_dirs)):
+                im_dir = im_dirs[k]
+                print(k,"===============>>",im_dir)
+                lab_vect, img_vect = self._process_data_dir(im_dir)
+                lab_vect_list.append(lab_vect)
+                img_vect_list.append(img_vect)
+                
+            ##
+            self.lab_vect = np.concatenate(lab_vect_list,axis=0)
+            self.img_vect = np.concatenate(img_vect_list,axis=0)
+            print("lab_vect::",lab_vect.shape,"  -- img_vect::",img_vect.shape)
+        else:
+            raise Exception("dataset not supported:"+str(self.dataset_name))
 
     def load_batch(self, batch_size=1, flip_prob=0, is_testing=False):
         if is_testing:
@@ -109,17 +135,18 @@ class InMemoryDataLoader():
 
 
 if __name__ == '__main__':
-    file_path = 'datasets/sample/'
-    csv_filename = 'images.csv'
-    images_dir = 'images_aligned' 
-    base_path = os.path.abspath(os.path.dirname(file_path))
-    csv_path = os.path.join(*[base_path,csv_filename])
-    img_path = os.path.join(*[base_path,images_dir])
+    root_data_path = 'datasets/'
+    #csv_filename = 'EmotioNet.csv'
+    #images_dir = 'EmotioNet_aligned' 
+    base_path = os.path.abspath(os.path.dirname(root_data_path))
+    #csv_path = os.path.join(*[base_path,csv_filename])
+    #img_path = os.path.join(*[base_path,images_dir])
     ## 
     dl = InMemoryDataLoader(dataset_name='EmotioNet',
                             img_res=(112, 112,3),
-                            path_csv=csv_path,
-                            path_image_dir=img_path, 
+                            #path_csv=csv_path,
+                            #path_image_dir=img_path, 
+                            root_data_path=root_data_path, 
                             max_images=12)
     ## 
     for batch_i, (labels , batch_images) in enumerate(dl.load_batch(batch_size=4)):
