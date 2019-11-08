@@ -54,7 +54,7 @@ emotion keywords from the Internet and automatically annotated with Action Units
 
 Here below, the distribution of a sample of 10,753 images processed with OpenFace. 
 
-<img src="images/hist.PNG" align="center" /> 
+<img src="images/hist.png" align="center" /> 
 
 
 ## Experiment Log
