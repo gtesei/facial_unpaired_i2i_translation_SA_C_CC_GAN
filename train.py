@@ -324,7 +324,6 @@ if __name__ == '__main__':
     parser.add_argument('-sample_interval', help='sample interval', dest='sample_interval', type=int, default=1000)
     parser.add_argument('-root_data_path', help='base file path', dest='root_data_path', type=str, default='datasets')
     parser.add_argument('-train_size', help='train size [-1 for all train data]', dest='train_size', type=int, default=-1)
-    parser.add_argument('-images_dir', help='images directory', dest='images_dir', type=str, default='images_aligned')
     args = parser.parse_args()
     
     # print parameters
