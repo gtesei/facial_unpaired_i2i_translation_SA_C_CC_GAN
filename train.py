@@ -320,7 +320,7 @@ if __name__ == '__main__':
     parser.add_argument('-adam_beta_1', help='Adam beta-1', dest='adam_beta_1', type=float, default=0.5)
     parser.add_argument('-adam_beta_2', help='Adam beta-2', dest='adam_beta_2', type=float, default=0.999)
     parser.add_argument('-epochs', help='N. epochs', dest='epochs', type=int, default=170)
-    parser.add_argument('-batch_size', help='batch size', dest='batch_size', type=int, default=32)
+    parser.add_argument('-batch_size', help='batch size', dest='batch_size', type=int, default=64)
     parser.add_argument('-sample_interval', help='sample interval', dest='sample_interval', type=int, default=1000)
     parser.add_argument('-root_data_path', help='base file path', dest='root_data_path', type=str, default='datasets')
     parser.add_argument('-train_size', help='train size [-1 for all train data]', dest='train_size', type=int, default=-1)
