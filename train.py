@@ -94,7 +94,7 @@ class C_CC_GAN():
 
         # Build the generators
         self.g_enc , self.g_dec = build_generator_enc_dec(img_shape=self.img_shape,gf=64,AU_num=self.AU_num,channels=self.channels,
-                                                          tranform_layer=False)
+                                                          tranform_layer=True)
         print("******** Generator_ENC ********")
         self.g_enc.summary()
         print("******** Generator_DEC ********")
