@@ -113,6 +113,7 @@ class InMemoryDataLoader():
                 
             ##
             self.lab_vect = np.concatenate(lab_vect_list,axis=0)
+            self.lab_vect = self.lab_vect / self.lab_vect.max()
             self.img_vect = np.concatenate(img_vect_list,axis=0)
             print("lab_vect::",lab_vect.shape,"  -- img_vect::",img_vect.shape)
         else:
