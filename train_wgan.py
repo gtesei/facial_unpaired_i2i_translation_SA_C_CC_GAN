@@ -29,7 +29,7 @@ from keras.utils import to_categorical
 import argparse
 from sklearn.metrics import accuracy_score
 
-from models import *
+from models_wgan  import *
 from utils import * 
 
 class C_CC_GAN():

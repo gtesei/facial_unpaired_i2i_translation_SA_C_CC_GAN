@@ -29,7 +29,7 @@ from keras.utils import to_categorical
 import argparse
 from sklearn.metrics import accuracy_score
 
-from models import *
+from models_gan import *
 from utils import * 
 
 class C_CC_GAN():
@@ -65,6 +65,7 @@ class C_CC_GAN():
         self.data_loader = InMemoryDataLoader(dataset_name='EmotioNet',
                                                             img_res=self.img_shape,
                                                             root_data_path=self.root_data_path,
+                                                            normalize=True,
                                                             max_images=train_size)
         # Number of filters in the first layer of G and D
         self.gf = 32
@@ -81,7 +82,7 @@ class C_CC_GAN():
             'binary_crossentropy'   # AU regression  
            ],
             optimizer=optimizer,
-            metrics=['mse','mse'],
+            metrics=['accuracy','accuracy'],
             loss_weights=[
             self.d_gan_loss_w , # gan
             self.d_cl_loss_w   # AU regression  
@@ -131,7 +132,7 @@ class C_CC_GAN():
                             ],
                             optimizer=optimizer)
 
-    def train(self, epochs, batch_size=1, sample_interval=50 , d_g_ratio=1):
+    def train(self, epochs, batch_size=1, sample_interval=50 , d_g_ratio=2):
 
         start_time = datetime.datetime.now()
         # logs 

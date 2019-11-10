@@ -187,7 +187,7 @@ class Enc_Dec():
         #
         self.combined = Model(inputs=[img,label0],
                               outputs=[ a, reconstr])
-        self.combined.compile(loss=['mse','mse'],
+        self.combined.compile(loss=['mae','mae'],
                             loss_weights=[  
                             self.enc_loss_w,      # enc loss  
                             self.dec_loss_w      # dec loss 
@@ -247,7 +247,8 @@ class Enc_Dec():
             
             # Reconstruct image 
             reconstr_ = self.dec.predict([zs1_,zs2_,zs3_,zs4_,labels0_d])
-            
+            print("a::",a)
+            print("labels0_d::",labels0_d)
             ## save reconstraction 
             if not os.path.exists('log_images'):
                 os.makedirs('log_images')
@@ -276,6 +277,8 @@ class Enc_Dec():
                     au_n[0,col_idx[c]] = alphas[r]
                     #
                     act_au = self.dec.predict([zs1_,zs2_,zs3_,zs4_,au_n])
+                    print("labels0_d::",labels0_d)
+                    print(r,c,"au_n::",au_n)
                     img_tens[n,:] = act_au
                     n += 1 
             #plot    
