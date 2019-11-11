@@ -132,7 +132,7 @@ class C_CC_GAN():
                             ],
                             optimizer=optimizer)
 
-    def train(self, epochs, batch_size=1, sample_interval=50 , d_g_ratio=2):
+    def train(self, epochs, batch_size=1, sample_interval=50 , d_g_ratio=5):
 
         start_time = datetime.datetime.now()
         # logs 
@@ -314,8 +314,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train')
     parser.add_argument('-d_gan_loss_w', help='loss weight for discrim. real/fake', dest='d_gan_loss_w', type=int, default=1)
     parser.add_argument('-d_cl_loss_w', help='loss weight for discrim. multiclass', dest='d_cl_loss_w', type=int, default=1)
-    parser.add_argument('-g_gan_loss_w', help='loss weight for gen. real/fake', dest='g_gan_loss_w', type=int, default=1)
-    parser.add_argument('-g_cl_loss_w', help='loss weight for gen. multiclass', dest='g_cl_loss_w', type=int, default=1)
+    parser.add_argument('-g_gan_loss_w', help='loss weight for gen. real/fake', dest='g_gan_loss_w', type=int, default=2)
+    parser.add_argument('-g_cl_loss_w', help='loss weight for gen. multiclass', dest='g_cl_loss_w', type=int, default=2)
     parser.add_argument('-rec_loss_w', help='reconstr. loss weight', dest='rec_loss_w', type=int, default=1)
     parser.add_argument('-adam_lr', help='Adam l.r.', dest='adam_lr', type=float, default=0.0002)
     parser.add_argument('-adam_beta_1', help='Adam beta-1', dest='adam_beta_1', type=float, default=0.5)
