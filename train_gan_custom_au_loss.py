@@ -38,7 +38,7 @@ def log_mean_absolute_error(y_true, y_pred):
     if not K.is_tensor(y_pred):
         y_pred = K.constant(y_pred)
     y_true = K.cast(y_true, y_pred.dtype)
-    return K.mean(  K.log(1. - K.abs(y_pred - y_true)  ) , axis=-1)
+    return -K.mean(  K.log(1. - K.clip(K.abs(y_pred - y_true),0,1.-K.epsilon())  ) , axis=-1)
 
 
 
