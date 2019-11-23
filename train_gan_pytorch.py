@@ -99,6 +99,10 @@ class C_CC_GAN():
         g_gan_loss_history, g_au_loss_history = [] , [] 
         reconstr_history = [] 
 
+        ##
+        self.g.train()
+        self.d.train()
+
         for epoch in range(epochs):
             for batch_i, (labels0 , imgs) in enumerate(self.data_loader.load_batch(batch_size=batch_size)):
                 imgs = np.transpose(imgs,(0,3,1,2))
@@ -154,8 +158,11 @@ class C_CC_GAN():
 
                 # If at save interval => save generated image samples
                 if batch_i % sample_interval == 0:
-                    self.sample_images(epoch, batch_i)
-                    #self.sample_images(epoch, batch_i,use_leo=True)
+                    with torch.no_grad():
+                        self.g.eval()
+                        self.sample_images(epoch, batch_i)
+                        #self.sample_images(epoch, batch_i,use_leo=True)
+                        self.g.train()
 
                     train_history = pd.DataFrame({
                         'epoch': epoch_history, 
@@ -174,7 +181,7 @@ class C_CC_GAN():
             imgs_d = np.transpose(imgs,(0,3,1,2))
             dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor 
             labels0_d, imgs_d = torch.tensor(labels0_d).to(device).type(dtype), torch.tensor(imgs_d).to(device).type(dtype)
-            gan_pred_prob,au_prob = self.d(imgs_d)
+            #gan_pred_prob,au_prob = self.d(imgs_d)
             
             # Translate images 
             zs = self.g.encode(imgs_d)
@@ -219,16 +226,14 @@ class C_CC_GAN():
                     img_tens[n,:] = act_au
                     n += 1 
             #plot    
-            col_names_plot = ['AU1','AU2','AU4','AU5','AU10',
-                         'AU12','AU15','AU25','AU45']
+            col_names_plot = ['AU1','AU2','AU4','AU5','AU10','AU12','AU15','AU25','AU45']
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 plot_grid(img_tens, 
                           row_titles=alphas, 
                           col_titles=col_names_plot,
                           nrow = n_row,ncol = n_col,
-                          save_filename="log_images/au_edition_%d_%d.png" % (epoch, batch_i))
-            break 
+                          save_filename="log_images/au_edition_%d_%d.png" % (epoch, batch_i)) 
 
 
 if __name__ == '__main__':
