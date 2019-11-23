@@ -148,16 +148,13 @@ class C_CC_GAN():
 
                 # log
                 if g_loss is not None:
-                    d_loss_dict = d_loss_dict.cpu().detach().numpy()
-                    g_loss_dict = g_loss_dict.cpu().detach().numpy()
-                    ##
                     epoch_history.append(epoch) 
                     batch_i_history.append(batch_i)
-                    d_gan_loss_history.append(d_loss_dict['d_adv_loss'])
-                    d_au_loss_history.append(d_loss_dict['d_cl_loss'])
-                    g_gan_loss_history.append(g_loss_dict['g_adv_loss'])
-                    g_au_loss_history.append(g_loss_dict['g_cl_loss'])
-                    reconstr_history.append(g_loss_dict['rec_loss'])
+                    d_gan_loss_history.append(d_loss_dict['d_adv_loss'].cpu().detach().numpy())
+                    d_au_loss_history.append(d_loss_dict['d_cl_loss'].cpu().detach().numpy())
+                    g_gan_loss_history.append(g_loss_dict['g_adv_loss'].cpu().detach().numpy())
+                    g_au_loss_history.append(g_loss_dict['g_cl_loss'].cpu().detach().numpy())
+                    reconstr_history.append(g_loss_dict['rec_loss'].cpu().detach().numpy())
 
                 # If at save interval => save generated image samples
                 if batch_i % sample_interval == 0:
