@@ -73,13 +73,13 @@ class C_CC_GAN():
         #optimizer = Adam(self.adam_lr, self.adam_beta_1, self.adam_beta_2) 
 
         # Build and compile the discriminators
-        self.d = Discriminator(img_shape=self.img_shape,df=64,AU_num=self.AU_num)
+        self.d = Discriminator(img_shape=self.img_shape,df=64,AU_num=self.AU_num).to(device)
         self.d.init_weights()
         print("******** Discriminator/Classifier ********")
         print(self.d)
 
         # Build the generators
-        self.g = Generator(img_shape=(3,112,112),gf=64,AU_num=self.AU_num)
+        self.g = Generator(img_shape=(3,112,112),gf=64,AU_num=self.AU_num).to(device)
         self.g.init_weights()
         print("******** Generator ********")
         print(self.g)
@@ -168,11 +168,11 @@ class C_CC_GAN():
                     train_history.to_csv(str(sys.argv[0]).split('.')[0]+'_train_log.csv',index=False)
 
     def sample_images(self, epoch, batch_i):
-        for labels0_d , imgs in self.data_loader.load_batch(batch_size=1):
+        for labels0 , imgs in self.data_loader.load_batch(batch_size=1):
             ## disc
             imgs_d = np.transpose(imgs,(0,3,1,2))
             dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor 
-            labels0_d, imgs_d = torch.tensor(labels0_d).to(device).type(dtype), torch.tensor(imgs_d).to(device).type(dtype)
+            labels0_d, imgs_d = torch.tensor(labels0).to(device).type(dtype), torch.tensor(imgs_d).to(device).type(dtype)
             gan_pred_prob,au_prob = self.d(imgs_d)
             
             # Translate images 
@@ -186,6 +186,7 @@ class C_CC_GAN():
                 os.makedirs('log_images')
             #plot    
             imgs = imgs
+            reconstr_ = reconstr_.cpu()
             reconstr_ = np.transpose(reconstr_.detach().numpy(),(0,2,3,1))
             reconstr_ = reconstr_
             with warnings.catch_warnings():
@@ -203,16 +204,17 @@ class C_CC_GAN():
             col_idx = [0,1,2,3,7,8,10,14,16] 
             assert len(col_names) == len(col_idx)
             alphas = [0,.33,.66,1]
-            au_grid = np.repeat(labels0_d,n_row*n_col,axis=0)
+            au_grid = np.repeat(labels0,n_row*n_col,axis=0)
             img_tens = np.repeat(imgs,n_row*n_col,axis=0)
             n = 0 
             for r in range(n_row):
                 for c in range(n_col):
                     au_n = au_grid[[n],:]
                     au_n[0,col_idx[c]] = alphas[r]
-                    au_n = au_n.to(device).type(dtype)
+                    au_n = torch.tensor(au_n).to(device).type(dtype)
                     #
                     act_au = self.g.translate_decode(zs,au_n)
+                    act_au = act_au.cpu()
                     act_au = np.transpose(act_au.detach().numpy(),(0,2,3,1))
                     act_au = act_au
                     img_tens[n,:] = act_au
@@ -239,7 +241,7 @@ if __name__ == '__main__':
     parser.add_argument('-adam_beta_1', help='Adam beta-1', dest='adam_beta_1', type=float, default=0.5)
     parser.add_argument('-adam_beta_2', help='Adam beta-2', dest='adam_beta_2', type=float, default=0.999)
     parser.add_argument('-epochs', help='N. epochs', dest='epochs', type=int, default=170)
-    parser.add_argument('-batch_size', help='batch size', dest='batch_size', type=int, default=64)
+    parser.add_argument('-batch_size', help='batch size', dest='batch_size', type=int, default=32)
     parser.add_argument('-sample_interval', help='sample interval', dest='sample_interval', type=int, default=1000)
     parser.add_argument('-root_data_path', help='base file path', dest='root_data_path', type=str, default='datasets')
     parser.add_argument('-train_size', help='train size [-1 for all train data]', dest='train_size', type=int, default=-1)
