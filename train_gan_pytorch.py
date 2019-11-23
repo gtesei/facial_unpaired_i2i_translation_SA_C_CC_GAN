@@ -159,7 +159,7 @@ class C_CC_GAN():
 
                     _labels1_all_other = np.concatenate([des_au_1,des_au_2,des_au_3,des_au_4,des_au_5,des_au_6,des_au_7,des_au_8,des_au_9,des_au_10])
 
-                    # I know this should be outside the loop; left here to make code more understandable 
+                    # I know this should be outside the loop; leftmake code more understandable 
                     _valid = np.concatenate([valid,valid,valid,valid,valid,valid,valid,valid,valid,valid])
 
                     idx = np.random.permutation(_imgs.shape[0])

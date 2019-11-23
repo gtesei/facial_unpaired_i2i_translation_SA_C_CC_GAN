@@ -71,7 +71,6 @@ def loss_nonsaturating(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,devi
         return d_loss
 
 class Generator(ModuleBase):
-    """Generator. Encoder-Decoder Architecture."""
     def __init__(self, img_shape,gf,AU_num,num_layers=4,f_size=6,tranform_layer=False,res_blocks=1):
         super(Generator, self).__init__()
         
