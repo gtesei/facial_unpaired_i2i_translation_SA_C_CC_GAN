@@ -151,6 +151,7 @@ if __name__ == '__main__':
                             root_data_path=root_data_path, 
                             max_images=12)
     ## 
+    print(dl.gen_rand_cond(batch_size=2).shape)
     for batch_i, (labels , batch_images) in enumerate(dl.load_batch(batch_size=4)):
         img_lab = ["batch:"+str(batch_i)+"_"+str(ii) for ii in range(4)]
         show_images_row(batch_images, img_lab, rows=1)
@@ -164,6 +165,7 @@ if __name__ == '__main__':
                   nrow = 2,ncol = 4,save_filename='data_loader_test_2')
     for batch_i, (labels , batch_images) in enumerate(dl.load_batch(batch_size=1)):
         pass
+    
     
     
     

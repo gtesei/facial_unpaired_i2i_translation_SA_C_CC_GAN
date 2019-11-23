@@ -19,12 +19,19 @@ class ModuleBase(nn.Module):
     def _weights_init_fn(self, m):
         classname = m.__class__.__name__
         if classname.find('Conv') != -1:
-            m.weight.data.normal_(0.0, 0.02)
-            if hasattr(m.bias, 'data'):
+            if hasattr(m, 'weight'):
+                torch.nn.init.xavier_uniform(m.weight)
+                #m.weight.data.normal_(0.0, 0.02)
+            if hasattr(m, 'bias'):
                 m.bias.data.fill_(0)
         elif classname.find('BatchNorm2d') != -1:
             m.weight.data.normal_(1.0, 0.02)
-            m.bias.data.fill_(0)
+            if hasattr(m.bias, 'data'):
+                m.bias.data.fill_(0)
+        elif type(m) == nn.Linear:
+            torch.nn.init.xavier_uniform(m.weight)
+            if hasattr(m.bias, 'data'):
+                m.bias.data.fill_(0.01)
 
     def _get_norm_layer(self, norm_type='batch'):
         if norm_type == 'batch':
@@ -42,7 +49,8 @@ class ModuleBase(nn.Module):
 def loss_nonsaturating(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,device,train_generator=True):
     batch_size = x_real.shape[0]
     ## TODO repeat 
-    des_au_1 = data_loader.gen_rand_cond(batch_size=batch_size).to(device)
+    dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor 
+    des_au_1 = torch.tensor(data_loader.gen_rand_cond(batch_size=batch_size)).to(device).type(dtype)
     ##
     z = g.encode(x_real)
     ##
@@ -57,18 +65,20 @@ def loss_nonsaturating(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,devi
     
     ## d_loss 
     d_loss = d_adv_loss + lambda_cl*d_cl_loss
+    d_loss_dict = {'d_adv_loss': d_adv_loss , "d_cl_loss": d_cl_loss}
     
     ## g_loss 
     if train_generator:
         g_adv_loss = -F.logsigmoid(d_adv_logits_fake).mean()
-        g_cl_loss = F.mse_loss(d_adv_logits_fake, des_au_1)
+        g_cl_loss = F.mse_loss(d_reg_fake, des_au_1)
         ## rec. loss 
         rec_loss = F.l1_loss(img_rec, x_real)
         g_loss = g_adv_loss + lambda_cl*g_cl_loss + lambda_cyc*rec_loss
+        g_loss_dict = {'g_adv_loss': g_adv_loss , "g_cl_loss": g_cl_loss, "rec_loss": rec_loss}
         ## 
-        return d_loss , g_loss
+        return d_loss , d_loss_dict , g_loss, g_loss_dict
     else:
-        return d_loss
+        return d_loss, d_loss_dict, None, None 
 
 class Generator(ModuleBase):
     def __init__(self, img_shape,gf,AU_num,num_layers=4,f_size=6,tranform_layer=False,res_blocks=1):
@@ -141,7 +151,7 @@ class Generator(ModuleBase):
     
     def translate_decode(self, z,au_target):
         _au_target = au_target.view(au_target.size(0), -1, 1, 1)
-        _z = z.pop()
+        _z = z[-1]
         #print("_au_target",_au_target.shape)
         #print("_z",_z.shape,len(z))
         res_block = torch.cat([_z, _au_target], dim=1)
@@ -149,7 +159,7 @@ class Generator(ModuleBase):
         for i,layer in enumerate(self.dec_layers):
             res_block = layer(res_block)
             if len(z) > 0 and i < self.res_blocks:
-                _z = z.pop()
+                _z = z[-2-i]
                 #print("res_block",res_block.shape)
                 #print("_z",_z.shape,len(z))
                 res_block = torch.cat([res_block, _z], dim=1)
@@ -197,11 +207,12 @@ class Discriminator(ModuleBase):
         )
 
     def forward(self, img):
-        common_pass = self.net(img).view(img.shape[0],-1)
+        #print("img:",img.shape)
+        common_pass = self.net.forward(img).view(img.shape[0],-1)
         #print("common_pass::",common_pass.shape)
         gan_out = self.gan_task(common_pass)
         au_reg_out = self.au_reg_task(common_pass)
-        return gan_out.squeeze() , au_reg_out.squeeze()
+        return gan_out , au_reg_out
 
 if __name__ == '__main__':
     d = Discriminator(img_shape=(3,112,112),df=64,AU_num=17)

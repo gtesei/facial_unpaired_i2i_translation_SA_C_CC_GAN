@@ -1,11 +1,6 @@
 from __future__ import print_function, division
 import scipy
 
-from keras.datasets import mnist
-from keras_contrib.layers.normalization.instancenormalization import InstanceNormalization
-from keras.layers import Input, Dense, Reshape, Flatten, Dropout, Concatenate
-from keras.layers import BatchNormalization, Activation, ZeroPadding2D
-from keras.layers.advanced_activations import LeakyReLU
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
@@ -46,6 +41,7 @@ class C_CC_GAN():
         img_rows = 112,img_cols = 112,channels = 3, 
         AU_num=35,
         lambda_cl=1,lambda_cyc=1,
+        loss_type='loss_nonsaturating',
         adam_lr=0.0002,adam_beta_1=0.5,adam_beta_2=0.999):
         # paths 
         self.root_data_path = root_data_path 
@@ -53,12 +49,15 @@ class C_CC_GAN():
         self.img_rows = img_rows
         self.img_cols = img_cols
         self.channels = channels
-        self.img_shape = (self.img_rows, self.img_cols, self.channels)
+        self.img_shape = (self.channels,self.img_rows, self.img_cols)
         self.AU_num = AU_num
 
         # Loss weights 
         self.lambda_cl = lambda_cl
         self.lambda_cyc = lambda_cyc
+        
+        # loss type 
+        self.loss_type = loss_type
 
         # optmizer params 
         self.adam_lr = adam_lr
@@ -67,7 +66,7 @@ class C_CC_GAN():
 
         # Configure data loader
         self.data_loader = InMemoryDataLoader(dataset_name='EmotioNet',
-                                                            img_res=self.img_shape,
+                                                            img_res=(self.img_rows, self.img_cols,self.channels), 
                                                             root_data_path=self.root_data_path,
                                                             normalize=True,
                                                             max_images=train_size)
@@ -76,17 +75,19 @@ class C_CC_GAN():
 
         # Build and compile the discriminators
         self.d = Discriminator(img_shape=self.img_shape,df=64,AU_num=self.AU_num)
+        self.d.init_weights()
         print("******** Discriminator/Classifier ********")
         print(self.d)
 
         # Build the generators
-        g = Generator(img_shape=(3,112,112),gf=64,AU_num=17)
+        self.g = Generator(img_shape=(3,112,112),gf=64,AU_num=self.AU_num)
+        self.g.init_weights()
         print("******** Generator ********")
-        print(g)
+        print(self.g)
         
         ##
-        self.g_optimizer = torch.optim.Adam(g.parameters(), self.adam_lr, betas=(self.adam_beta_1, self.adam_beta_2))
-        self.d_optimizer = torch.optim.Adam(d.parameters(), self.adam_lr, betas=(self.adam_beta_1, self.adam_beta_2))
+        self.g_optimizer = torch.optim.Adam(self.g.parameters(), self.adam_lr, betas=(self.adam_beta_1, self.adam_beta_2))
+        self.d_optimizer = torch.optim.Adam(self.d.parameters(), self.adam_lr, betas=(self.adam_beta_1, self.adam_beta_2))
 
 
     def train(self, epochs, batch_size=1, sample_interval=50 , d_g_ratio=5):
@@ -94,106 +95,62 @@ class C_CC_GAN():
         start_time = datetime.datetime.now()
         # logs 
         epoch_history, batch_i_history,  = [] , []   
-        d_gan_loss_history, d_gan_accuracy_history, d_au_loss_history, d_au_mse_history = [], [], [], [] 
+        d_gan_loss_history, d_au_loss_history = [], [],
         g_gan_loss_history, g_au_loss_history = [] , [] 
         reconstr_history = [] 
 
-        # Adversarial loss ground truths
-        valid = np.ones((batch_size,1) )
-        fake = np.zeros((batch_size,1) )
-
         for epoch in range(epochs):
             for batch_i, (labels0 , imgs) in enumerate(self.data_loader.load_batch(batch_size=batch_size)):
-                des_au_1 = self.data_loader.gen_rand_cond(batch_size=batch_size)
-                des_au_2 = self.data_loader.gen_rand_cond(batch_size=batch_size)
-                des_au_3 = self.data_loader.gen_rand_cond(batch_size=batch_size)
-                des_au_4 = self.data_loader.gen_rand_cond(batch_size=batch_size)
-                des_au_5 = self.data_loader.gen_rand_cond(batch_size=batch_size)
-                #
-                des_au_6 = self.data_loader.gen_rand_cond(batch_size=batch_size)
-                des_au_7 = self.data_loader.gen_rand_cond(batch_size=batch_size)
-                des_au_8 = self.data_loader.gen_rand_cond(batch_size=batch_size) 
-                des_au_9 = self.data_loader.gen_rand_cond(batch_size=batch_size)
-                des_au_10 = self.data_loader.gen_rand_cond(batch_size=batch_size)
-                
-                # ----------------------
-                #  Train Discriminators
-                # ----------------------
+                imgs = np.transpose(imgs,(0,3,1,2))
+                dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor 
+                labels0, imgs = torch.tensor(labels0).to(device).type(dtype), torch.tensor(imgs).to(device).type(dtype)
+                if self.loss_type == 'loss_nonsaturating':
+                    d_loss , d_loss_dict , g_loss, g_loss_dict = loss_nonsaturating(self.g, self.d, 
+                                                                                    imgs, labels0, 
+                                                                                    self.lambda_cl, self.lambda_cyc, 
+                                                                                    self.data_loader,
+                                                                                    device,
+                                                                                    train_generator=(batch_i % d_g_ratio == 0))
+                    ## opt. discr. 
+                    self.d_optimizer.zero_grad()
+                    d_loss.backward(retain_graph=True)
+                    self.d_optimizer.step()
+                    ## opt. gen.
+                    if g_loss is not None:
+                        self.g_optimizer.zero_grad()
+                        g_loss.backward()
+                        self.g_optimizer.step()
+                else:
+                    raise Exception("Unknown loss type::"+str(self.loss_type))
 
-                # Translate images to opposite domain
-                zs1,zs2,zs3,zs4 = self.g_enc.predict(imgs)
-                fakes_1 = self.g_dec.predict([zs1,zs2,zs3,zs4,des_au_1])
-                fakes_2 = self.g_dec.predict([zs1,zs2,zs3,zs4,des_au_2])
-                fakes_3 = self.g_dec.predict([zs1,zs2,zs3,zs4,des_au_3])
-                fakes_4 = self.g_dec.predict([zs1,zs2,zs3,zs4,des_au_4])
-                fakes_5 = self.g_dec.predict([zs1,zs2,zs3,zs4,des_au_5])
-                #
-                fakes_6 = self.g_dec.predict([zs1,zs2,zs3,zs4,des_au_6])
-                fakes_7 = self.g_dec.predict([zs1,zs2,zs3,zs4,des_au_7])
-                fakes_8 = self.g_dec.predict([zs1,zs2,zs3,zs4,des_au_8])
-                fakes_9 = self.g_dec.predict([zs1,zs2,zs3,zs4,des_au_9])
-                fakes_10 = self.g_dec.predict([zs1,zs2,zs3,zs4,des_au_10])
+                elapsed_time = datetime.datetime.now() - start_time
 
-            
-                # Train the discriminators (original images = real / translated = Fake)
-                idx = np.random.permutation(11*labels0.shape[0])
-                all_au = np.concatenate([labels0,des_au_1,des_au_2,des_au_3,des_au_4,des_au_5,des_au_6,des_au_7,des_au_8,des_au_9,des_au_10])
-                all_imgs = np.concatenate([imgs,fakes_1,fakes_2,fakes_3,fakes_4,fakes_5,fakes_6,fakes_7,fakes_8,fakes_9,fakes_10])
-                gan_labels = np.concatenate([valid,fake,fake,fake,fake,fake,fake,fake,fake,fake,fake])
-                # shuffle 
-                all_au = all_au[idx]
-                all_imgs = all_imgs[idx]
-                gan_labels = gan_labels[idx]
-
-                d_loss  = self.d.train_on_batch(all_imgs, [gan_labels,all_au])
-
-                if batch_i % d_g_ratio == 0:
-
-                    # ------------------
-                    #  Train Generators
-                    # ------------------
-                    _imgs = np.concatenate([
-                        imgs, imgs, imgs, imgs, imgs, imgs, imgs, imgs, imgs, imgs])
-
-                    _labels0_cat = np.concatenate([labels0, labels0, labels0, labels0, labels0, labels0, labels0, labels0, labels0, labels0])
-
-                    _labels1_all_other = np.concatenate([des_au_1,des_au_2,des_au_3,des_au_4,des_au_5,des_au_6,des_au_7,des_au_8,des_au_9,des_au_10])
-
-                    # I know this should be outside the loop; leftmake code more understandable 
-                    _valid = np.concatenate([valid,valid,valid,valid,valid,valid,valid,valid,valid,valid])
-
-                    idx = np.random.permutation(_imgs.shape[0])
-                    _imgs = _imgs[idx]
-                    _labels0_cat = _labels0_cat[idx]
-                    _labels1_all_other = _labels1_all_other[idx]
-                    _valid = _valid[idx]
-
-                    # Train the generators
-                    g_loss = self.combined.train_on_batch([_imgs, _labels0_cat, _labels1_all_other],
-                                                            [_valid, _labels1_all_other, _imgs])
-
-                    elapsed_time = datetime.datetime.now() - start_time
-
-                    try:
-                        print ("[Epoch %d/%d] [Batch %d/%d] [D_gan loss: %f, acc_gan: %3d%%] [D_AU_loss loss: %f, au_mse: %f] [G_gan loss: %05f, G_AU_loss: %05f, recon: %05f] time: %s " \
+                try:
+                    if g_loss is not None:
+                        print ("[Epoch %d/%d] [Batch %d/%d] [D_gan loss: %f, D_AU_loss: %f] [G_gan loss: %05f, G_AU_loss: %05f, recon: %05f] time: %s " \
                             % ( epoch, epochs,
                                 batch_i, self.data_loader.n_batches,
-                                d_loss[1],100*d_loss[3],d_loss[2],d_loss[4],
-                                g_loss[1],g_loss[2],g_loss[3],
+                                d_loss_dict['d_adv_loss'], d_loss_dict['d_cl_loss'],  
+                                g_loss_dict['g_adv_loss'],g_loss_dict['g_cl_loss'], g_loss_dict['rec_loss'],  
                                 elapsed_time))
-                    except:
-                        print("*** problem to log ***")
+                    else:
+                        print ("[Epoch %d/%d] [Batch %d/%d] [D_gan loss: %f, D_AU_loss: %f] time: %s " \
+                            % ( epoch, epochs,
+                                batch_i, self.data_loader.n_batches,
+                                d_loss_dict['d_adv_loss'], d_loss_dict['d_cl_loss'],  
+                                elapsed_time))
+                except:
+                    print("*** problem to log ***")
 
-                    # log
+                # log
+                if g_loss is not None:
                     epoch_history.append(epoch) 
                     batch_i_history.append(batch_i)
-                    d_gan_loss_history.append(d_loss[1])
-                    d_gan_accuracy_history.append(100*d_loss[3])
-                    d_au_loss_history.append(d_loss[2])
-                    d_au_mse_history.append(100*d_loss[4])
-                    g_gan_loss_history.append(g_loss[1])
-                    g_au_loss_history.append(g_loss[2])
-                    reconstr_history.append(g_loss[3])
+                    d_gan_loss_history.append(d_loss_dict['d_adv_loss'])
+                    d_au_loss_history.append(d_loss_dict['d_cl_loss'])
+                    g_gan_loss_history.append(g_loss_dict['g_adv_loss'])
+                    g_au_loss_history.append(g_loss_dict['g_cl_loss'])
+                    reconstr_history.append(g_loss_dict['rec_loss'])
 
                 # If at save interval => save generated image samples
                 if batch_i % sample_interval == 0:
@@ -204,9 +161,7 @@ class C_CC_GAN():
                         'epoch': epoch_history, 
                         'batch': batch_i_history, 
                         'd_gan_loss': d_gan_loss_history, 
-                        'd_gan_accuracy' : d_gan_accuracy_history,
                         'd_AU_loss': d_au_loss_history, 
-                        'd_AU_MSE': d_au_mse_history, 
                         'g_gan_loss': g_gan_loss_history, 
                         'g_AU_loss': g_au_loss_history, 
                         'reconstr_loss': reconstr_history
@@ -214,23 +169,29 @@ class C_CC_GAN():
                     train_history.to_csv(str(sys.argv[0]).split('.')[0]+'_train_log.csv',index=False)
 
     def sample_images(self, epoch, batch_i):
-        for labels0_d , imgs_d in self.data_loader.load_batch(batch_size=1):
+        for labels0_d , imgs in self.data_loader.load_batch(batch_size=1):
             ## disc
-            gan_pred_prob,au_prob = self.d.predict(imgs_d)
+            imgs_d = np.transpose(imgs,(0,3,1,2))
+            dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor 
+            labels0_d, imgs_d = torch.tensor(labels0_d).to(device).type(dtype), torch.tensor(imgs_d).to(device).type(dtype)
+            gan_pred_prob,au_prob = self.d(imgs_d)
             
             # Translate images 
-            zs1_,zs2_,zs3_,zs4_ = self.g_enc.predict(imgs_d)
+            zs = self.g.encode(imgs_d)
             
             # Reconstruct image 
-            reconstr_ = self.g_dec.predict([zs1_,zs2_,zs3_,zs4_,labels0_d])
+            reconstr_ = self.g.translate_decode(zs,labels0_d)
             
             ## save reconstraction 
             if not os.path.exists('log_images'):
                 os.makedirs('log_images')
             #plot    
+            imgs = imgs
+            reconstr_ = np.transpose(reconstr_.detach().numpy(),(0,2,3,1))
+            reconstr_ = reconstr_
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                plot_grid(np.concatenate([imgs_d, reconstr_]), 
+                plot_grid(np.concatenate([imgs, reconstr_]), 
                           row_titles=None, 
                           col_titles=["Orig.[ep:%d]" % (epoch),'Reconstr.'],
                           nrow = 1,ncol = 2,
@@ -244,14 +205,17 @@ class C_CC_GAN():
             assert len(col_names) == len(col_idx)
             alphas = [0,.33,.66,1]
             au_grid = np.repeat(labels0_d,n_row*n_col,axis=0)
-            img_tens = np.repeat(imgs_d,n_row*n_col,axis=0)
+            img_tens = np.repeat(imgs,n_row*n_col,axis=0)
             n = 0 
             for r in range(n_row):
                 for c in range(n_col):
                     au_n = au_grid[[n],:]
                     au_n[0,col_idx[c]] = alphas[r]
+                    au_n = au_n.to(device).type(dtype)
                     #
-                    act_au = self.g_dec.predict([zs1_,zs2_,zs3_,zs4_,au_n])
+                    act_au = self.g.translate_decode(zs,au_n)
+                    act_au = np.transpose(act_au.detach().numpy(),(0,2,3,1))
+                    act_au = act_au
                     img_tens[n,:] = act_au
                     n += 1 
             #plot    
@@ -269,11 +233,9 @@ class C_CC_GAN():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train')
-    parser.add_argument('-d_gan_loss_w', help='loss weight for discrim. real/fake', dest='d_gan_loss_w', type=int, default=1)
-    parser.add_argument('-d_cl_loss_w', help='loss weight for discrim. multiclass', dest='d_cl_loss_w', type=int, default=1)
-    parser.add_argument('-g_gan_loss_w', help='loss weight for gen. real/fake', dest='g_gan_loss_w', type=int, default=2)
-    parser.add_argument('-g_cl_loss_w', help='loss weight for gen. multiclass', dest='g_cl_loss_w', type=int, default=2)
-    parser.add_argument('-rec_loss_w', help='reconstr. loss weight', dest='rec_loss_w', type=int, default=1)
+    parser.add_argument('-lambda_cl', help='loss weight for cond. regress. loss', dest='lambda_cl', type=float, default=1.)
+    parser.add_argument('-lambda_cyc', help='reconstr. loss weight', dest='lambda_cyc', type=float, default=1.)
+    parser.add_argument('-loss_type', help='loss type [loss_nonsaturating] ', dest='loss_type', type=str, default='loss_nonsaturating')
     parser.add_argument('-adam_lr', help='Adam l.r.', dest='adam_lr', type=float, default=0.0002)
     parser.add_argument('-adam_beta_1', help='Adam beta-1', dest='adam_beta_1', type=float, default=0.5)
     parser.add_argument('-adam_beta_2', help='Adam beta-2', dest='adam_beta_2', type=float, default=0.999)
@@ -298,8 +260,7 @@ if __name__ == '__main__':
         root_data_path = root_data_path,
         train_size = args.train_size, 
         AU_num=17,
-        d_gan_loss_w=args.d_gan_loss_w,d_cl_loss_w=args.d_cl_loss_w,
-        g_gan_loss_w=args.g_gan_loss_w,g_cl_loss_w=args.g_cl_loss_w,
-        rec_loss_w=args.rec_loss_w,
+        lambda_cl=args.lambda_cl,lambda_cyc=args.lambda_cyc,
+        loss_type=args.loss_type,
         adam_lr=args.adam_lr,adam_beta_1=args.adam_beta_1,adam_beta_2=args.adam_beta_2)
     gan.train(epochs=args.epochs, batch_size=args.batch_size, sample_interval=args.sample_interval)
