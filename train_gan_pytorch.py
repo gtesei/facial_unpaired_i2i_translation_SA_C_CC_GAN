@@ -126,6 +126,7 @@ class C_CC_GAN():
                 else:
                     raise Exception("Unknown loss type::"+str(self.loss_type))
 
+                torch.cuda.empty_cache() 
                 elapsed_time = datetime.datetime.now() - start_time
 
                 try:
@@ -179,7 +180,7 @@ class C_CC_GAN():
             ## disc
             imgs_d = np.transpose(imgs,(0,3,1,2))
             dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor 
-            labels0_d, imgs_d = torch.tensor(labels0_d).to(device).type(dtype), torch.tensor(imgs_d).to(device).type(dtype)
+            labels0_d, imgs_d = torch.tensor(labels0).to(device).type(dtype), torch.tensor(imgs_d).to(device).type(dtype)
             #gan_pred_prob,au_prob = self.d(imgs_d)
             
             # Translate images 
@@ -234,7 +235,8 @@ class C_CC_GAN():
                           row_titles=alphas, 
                           col_titles=col_names_plot,
                           nrow = n_row,ncol = n_col,
-                          save_filename="log_images/au_edition_%d_%d.png" % (epoch, batch_i)) 
+                          save_filename="log_images/au_edition_%d_%d.png" % (epoch, batch_i))
+            break 
 
 
 if __name__ == '__main__':
