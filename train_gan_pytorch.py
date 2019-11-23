@@ -22,7 +22,6 @@ import torchvision
 import tqdm
 
 import warnings
-import tensorflow as tf 
 
 import argparse
 from sklearn.metrics import accuracy_score
