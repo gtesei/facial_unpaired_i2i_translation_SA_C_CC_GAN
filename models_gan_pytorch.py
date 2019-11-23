@@ -61,7 +61,7 @@ def loss_nonsaturating(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,devi
     d_adv_logits_fake, d_reg_fake = d(fakes_1)
     d_adv_loss = -F.logsigmoid(d_adv_logits_true).mean() - F.logsigmoid(-d_adv_logits_fake).mean()
     ## d cond reg. loss 
-    d_cl_loss = F.mse_loss(d_reg_true, au)
+    d_cl_loss = F.l1_loss(d_reg_true, au)
     
     ## d_loss 
     d_loss = d_adv_loss + lambda_cl*d_cl_loss
@@ -70,7 +70,7 @@ def loss_nonsaturating(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,devi
     ## g_loss 
     if train_generator:
         g_adv_loss = -F.logsigmoid(d_adv_logits_fake).mean()
-        g_cl_loss = F.mse_loss(d_reg_fake, des_au_1)
+        g_cl_loss = F.l1_loss(d_reg_fake, des_au_1)
         ## rec. loss 
         rec_loss = F.l1_loss(img_rec, x_real)
         g_loss = g_adv_loss + lambda_cl*g_cl_loss + lambda_cyc*rec_loss

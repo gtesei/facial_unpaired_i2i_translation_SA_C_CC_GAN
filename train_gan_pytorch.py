@@ -182,21 +182,23 @@ class C_CC_GAN():
             dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor 
             labels0_d, imgs_d = torch.tensor(labels0).to(device).type(dtype), torch.tensor(imgs_d).to(device).type(dtype)
             #gan_pred_prob,au_prob = self.d(imgs_d)
+            des_au_1 = torch.tensor(data_loader.gen_rand_cond(batch_size=batch_size)).to(device).type(dtype)
             
             # Translate images 
             zs = self.g.encode(imgs_d)
             
             # Reconstruct image 
             reconstr_ = self.g.translate_decode(zs,labels0_d)
+
+            # Transl. image 
+            transl_ = self.g.translate_decode(zs,des_au_1)
             
             ## save reconstraction 
             if not os.path.exists('log_images'):
                 os.makedirs('log_images')
-            #plot    
-            imgs = imgs
+            #plot reconstr_   
             reconstr_ = reconstr_.cpu()
             reconstr_ = np.transpose(reconstr_.detach().numpy(),(0,2,3,1))
-            reconstr_ = reconstr_
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 plot_grid(np.concatenate([imgs, reconstr_]), 
@@ -204,6 +206,17 @@ class C_CC_GAN():
                           col_titles=["Orig.[ep:%d]" % (epoch),'Reconstr.'],
                           nrow = 1,ncol = 2,
                           save_filename="log_images/reconstr_%d_%d.png" % (epoch, batch_i))
+
+            #plot transl_   
+            transl_ = transl_.cpu()
+            transl_ = np.transpose(transl_.detach().numpy(),(0,2,3,1))
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                plot_grid(np.concatenate([imgs, transl_]), 
+                          row_titles=None, 
+                          col_titles=["Orig.[ep:%d]" % (epoch),'Transl.'],
+                          nrow = 1,ncol = 2,
+                          save_filename="log_images/translat_%d_%d.png" % (epoch, batch_i))
             ####
             n_row = 4 # alpha 
             n_col = 9 # AUs 
