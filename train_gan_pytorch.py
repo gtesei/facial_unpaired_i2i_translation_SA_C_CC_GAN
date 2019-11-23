@@ -148,6 +148,9 @@ class C_CC_GAN():
 
                 # log
                 if g_loss is not None:
+                    d_loss_dict = d_loss_dict.cpu().detach().numpy()
+                    g_loss_dict = g_loss_dict.cpu().detach().numpy()
+                    ##
                     epoch_history.append(epoch) 
                     batch_i_history.append(batch_i)
                     d_gan_loss_history.append(d_loss_dict['d_adv_loss'])
