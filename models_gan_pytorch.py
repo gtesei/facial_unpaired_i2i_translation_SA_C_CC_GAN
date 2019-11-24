@@ -47,6 +47,8 @@ class ModuleBase(nn.Module):
     
     
 def train_D_wasserstein_gp(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,device,d_optimizer):
+    for p in g.parameters():
+        p.requires_grad = False
     batch_size = x_real.shape[0]
     #
     dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor 
@@ -78,6 +80,8 @@ def train_D_wasserstein_gp(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,
     return d_loss_dict
     
 def train_G_wasserstein_gp(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,device,g_optimizer):
+    for p in d.parameters():
+        p.requires_grad = False
     batch_size = x_real.shape[0]
     #
     dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor 
