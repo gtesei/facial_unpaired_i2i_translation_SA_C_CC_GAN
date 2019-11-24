@@ -72,7 +72,7 @@ def train_D_wasserstein_gp(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,
     d_loss_dict = {'d_adv_loss': d_adv_loss , "d_cl_loss": d_cl_loss}
     ## opt. discr. 
     d_optimizer.zero_grad()
-    d_loss.backward(retain_graph=True)
+    d_loss.backward()
     d_optimizer.step()
     #
     return d_loss_dict
