@@ -182,7 +182,7 @@ class C_CC_GAN():
             dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor 
             labels0_d, imgs_d = torch.tensor(labels0).to(device).type(dtype), torch.tensor(imgs_d).to(device).type(dtype)
             #gan_pred_prob,au_prob = self.d(imgs_d)
-            des_au_1 = torch.tensor(data_loader.gen_rand_cond(batch_size=batch_size)).to(device).type(dtype)
+            des_au_1 = torch.tensor(self.data_loader.gen_rand_cond(batch_size=1)).to(device).type(dtype)
             
             # Translate images 
             zs = self.g.encode(imgs_d)
