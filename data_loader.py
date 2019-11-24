@@ -57,6 +57,7 @@ class InMemoryDataLoader():
         idx = np.random.choice(self.lab_vect.shape[0],size=batch_size)
         cond = self.lab_vect[idx]
         cond += np.random.uniform(-0.1, 0.1, cond.shape)
+        cond = np.clip(a=cond,a_min=0,a_max=5)
         return cond
     
     def _process_data_dir(self, 

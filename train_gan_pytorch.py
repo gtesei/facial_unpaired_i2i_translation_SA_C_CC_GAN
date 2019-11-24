@@ -123,6 +123,19 @@ class C_CC_GAN():
                         self.g_optimizer.zero_grad()
                         g_loss.backward()
                         self.g_optimizer.step()
+                elif self.loss_type == 'loss_wasserstein_gp':
+                    # train critic 
+                    d_loss_dict = train_D_wasserstein_gp(self.g, self.d, imgs, labels0, 
+                                           self.lambda_cl, self.lambda_cyc, 
+                                           self.data_loader,
+                                           device,self.d_optimizer)
+                    # train generator 
+                    if batch_i % d_g_ratio == 0: 
+                        g_loss_dict = train_G_wasserstein_gp(self.g, self.d, imgs, labels0, 
+                                           self.lambda_cl, self.lambda_cyc, 
+                                           self.data_loader,
+                                           device,self.g_optimizer)
+                    
                 else:
                     raise Exception("Unknown loss type::"+str(self.loss_type))
 
@@ -256,7 +269,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train')
     parser.add_argument('-lambda_cl', help='loss weight for cond. regress. loss', dest='lambda_cl', type=float, default=1.)
     parser.add_argument('-lambda_cyc', help='reconstr. loss weight', dest='lambda_cyc', type=float, default=1.)
-    parser.add_argument('-loss_type', help='loss type [loss_nonsaturating] ', dest='loss_type', type=str, default='loss_nonsaturating')
+    parser.add_argument('-loss_type', help='loss type [loss_nonsaturating] ', dest='loss_type', type=str, default='loss_wasserstein_gp')
+    parser.add_argument('-d_g_ratio', help='# train iterations of critic per each train iteration of generator', dest='d_g_ratio', type=int, default=2)
     parser.add_argument('-adam_lr', help='Adam l.r.', dest='adam_lr', type=float, default=0.0002)
     parser.add_argument('-adam_beta_1', help='Adam beta-1', dest='adam_beta_1', type=float, default=0.5)
     parser.add_argument('-adam_beta_2', help='Adam beta-2', dest='adam_beta_2', type=float, default=0.999)
@@ -284,4 +298,7 @@ if __name__ == '__main__':
         lambda_cl=args.lambda_cl,lambda_cyc=args.lambda_cyc,
         loss_type=args.loss_type,
         adam_lr=args.adam_lr,adam_beta_1=args.adam_beta_1,adam_beta_2=args.adam_beta_2)
-    gan.train(epochs=args.epochs, batch_size=args.batch_size, sample_interval=args.sample_interval)
+    gan.train(epochs=args.epochs, 
+              batch_size=args.batch_size, 
+              sample_interval=args.sample_interval,
+              d_g_ratio=args.d_g_ratio)

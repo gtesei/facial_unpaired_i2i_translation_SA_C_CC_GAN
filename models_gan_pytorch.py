@@ -46,6 +46,64 @@ class ModuleBase(nn.Module):
         return norm_layer
     
     
+def train_D_wasserstein_gp(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,device,d_optimizer):
+    batch_size = x_real.shape[0]
+    #
+    dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor 
+    des_au_1 = torch.tensor(data_loader.gen_rand_cond(batch_size=batch_size)).to(device).type(dtype)
+    ##
+    z = g.encode(x_real)
+    ##
+    fakes_1 = g.translate_decode(z,des_au_1)
+    #img_rec = g.translate_decode(z,au)
+    #
+    d_adv_logits_true, d_reg_true = d(x_real)
+    d_adv_logits_fake, d_reg_fake = d(fakes_1)
+    #
+    alpha = torch.rand(batch_size,1,1,1,device=device)
+    x_gp = alpha*x_fake+(1-alpha)*x_real
+    d_gp,_ = d(x_gp)
+    grad = torch.autograd.grad(d_gp.sum(), x_gp, create_graph=True)
+    grad_norm = grad[0].reshape(batch_size, -1).norm(dim=1)
+    #
+    d_cl_loss = F.l1_loss(d_reg_true, au)
+    d_adv_loss = -d_adv_logits_true.mean() + d_adv_logits_fake.mean()
+    d_loss = d_adv_loss+lambda_cl*d_cl_loss+10*((grad_norm - 1)**2).mean()
+    d_loss_dict = {'d_adv_loss': d_adv_loss , "d_cl_loss": d_cl_loss}
+    ## opt. discr. 
+    d_optimizer.zero_grad()
+    d_loss.backward(retain_graph=True)
+    d_optimizer.step()
+    #
+    return d_loss_dict
+    
+def train_G_wasserstein_gp(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,device,g_optimizer):
+    batch_size = x_real.shape[0]
+    #
+    dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor 
+    des_au_1 = torch.tensor(data_loader.gen_rand_cond(batch_size=batch_size)).to(device).type(dtype)
+    ##
+    z = g.encode(x_real)
+    ##
+    fakes_1 = g.translate_decode(z,des_au_1)
+    img_rec = g.translate_decode(z,au)
+    #
+    #d_adv_logits_true, d_reg_true = d(x_real)
+    d_adv_logits_fake, d_reg_fake = d(fakes_1)
+    #
+    g_adv_loss = -d_adv_logits_fake.mean()
+    g_cl_loss = F.l1_loss(d_reg_fake, des_au_1)
+    rec_loss = F.l1_loss(img_rec, x_real)
+    g_loss = g_adv_loss + lambda_cl*g_cl_loss + lambda_cyc*rec_loss
+    g_loss_dict = {'g_adv_loss': g_adv_loss , "g_cl_loss": g_cl_loss, "rec_loss": rec_loss}
+    #
+    g_optimizer.zero_grad()
+    g_loss.backward()
+    g_optimizer.step()
+    #
+    return g_loss_dict
+    
+    
 def loss_nonsaturating(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,device,train_generator=True):
     batch_size = x_real.shape[0]
     ## TODO repeat 
