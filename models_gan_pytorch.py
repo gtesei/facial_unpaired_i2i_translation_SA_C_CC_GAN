@@ -255,12 +255,14 @@ class Discriminator(ModuleBase):
         )
         self.gan_task = nn.Sequential(
             torch.nn.Linear(512,512),
-            nn.LeakyReLU(0.2, inplace=True),
+            #nn.LeakyReLU(0.2, inplace=True),
+            nn.ReLU(),
             torch.nn.Linear(512,1)
         )
         self.au_reg_task = nn.Sequential(
             torch.nn.Linear(512,512),
-            nn.LeakyReLU(0.2, inplace=True),
+            #nn.LeakyReLU(0.2, inplace=True),
+            nn.ReLU(),
             torch.nn.Linear(512,AU_num)
         )
 
