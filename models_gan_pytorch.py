@@ -59,8 +59,8 @@ def train_D_wasserstein_gp(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,
     ##
     fakes_list , des_au_list = [] , []
     for des_au_1 in alist:
-        fakes_1 = g.translate_decode(z,des_au_1)
-        fakes_list.append(fakes_1)
+        _fakes_1 = g.translate_decode(z,des_au_1)
+        fakes_list.append(_fakes_1)
         des_au_list.append(des_au_1)
     fakes_1 = torch.cat(fakes_list, dim=0)
     des_au_1 = torch.cat(des_au_list, dim=0)
@@ -70,7 +70,7 @@ def train_D_wasserstein_gp(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,
     d_adv_logits_fake, d_reg_fake = d(fakes_1)
     #
     alpha = torch.rand(batch_size,1,1,1,device=device)
-    x_gp = alpha*fakes_1+(1-alpha)*x_real
+    x_gp = alpha*_fakes_1+(1-alpha)*x_real
     d_gp,_ = d(x_gp)
     grad = torch.autograd.grad(d_gp.sum(), x_gp, create_graph=True)
     grad_norm = grad[0].reshape(batch_size, -1).norm(dim=1)
