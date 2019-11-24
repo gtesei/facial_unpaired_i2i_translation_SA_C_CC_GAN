@@ -53,14 +53,17 @@ def train_D_wasserstein_gp(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,
     #
     dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor 
     #des_au_1 = torch.tensor(data_loader.gen_rand_cond(batch_size=batch_size)).to(device).type(dtype)
-    des_au_1 = torch.tensor(data_loader.gen_rand_cond_for_binary_au(au.cpu().detach().numpy())).to(device).type(dtype)
+    alist = torch.tensor(data_loader.gen_rand_cond_for_binary_au(au.cpu().detach().numpy())).to(device).type(dtype)
     ##
     z = g.encode(x_real)
     ##
-    z2 = []
-    for _z in z:
-        z2.append(_z.repeat(au.shape[1],1))
-    fakes_1 = g.translate_decode(z2,des_au_1)
+    fakes_list , des_au_list = [] , []
+    for des_au_1 in alist:
+        fakes_1 = g.translate_decode(z,des_au_1)
+        fakes_list.append(fakes_1)
+        des_au_list.append(des_au_1)
+    fakes_1 = torch.cat(fakes_list, dim=0)
+    des_au_1 = torch.cat(des_au_list, dim=0)
     #img_rec = g.translate_decode(z,au)
     #
     d_adv_logits_true, d_reg_true = d(x_real)
@@ -91,14 +94,18 @@ def train_G_wasserstein_gp(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,
     #
     dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor 
     #des_au_1 = torch.tensor(data_loader.gen_rand_cond(batch_size=batch_size)).to(device).type(dtype)
-    des_au_1 = torch.tensor(data_loader.gen_rand_cond_for_binary_au(au.cpu().detach().numpy())).to(device).type(dtype)
+    alist = torch.tensor(data_loader.gen_rand_cond_for_binary_au(au.cpu().detach().numpy())).to(device).type(dtype)
     ##
     z = g.encode(x_real)
     ##
-    z2 = []
-    for _z in z:
-        z2.append(_z.repeat(au.shape[1],1))
-    fakes_1 = g.translate_decode(z2,des_au_1)
+    fakes_list , des_au_list = [] , []
+    for des_au_1 in alist:
+        fakes_1 = g.translate_decode(z,des_au_1)
+        fakes_list.append(fakes_1)
+        des_au_list.append(des_au_1)
+    fakes_1 = torch.cat(fakes_list, dim=0)
+    des_au_1 = torch.cat(des_au_list, dim=0)
+    #fakes_1 = g.translate_decode(z,des_au_1)
     img_rec = g.translate_decode(z,au)
     #
     #d_adv_logits_true, d_reg_true = d(x_real)

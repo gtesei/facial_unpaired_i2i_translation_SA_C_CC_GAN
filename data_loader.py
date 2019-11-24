@@ -67,9 +67,8 @@ class InMemoryDataLoader():
             _bt = bt.copy()
             _bt[:,i] = np.ones_like(_bt[:,i]) - _bt[:,i]
             alist.append(_bt)
-        cond = np.concatenate(alist,axis=0)
-        cond = np.clip(a=cond,a_min=0,a_max=1)
-        return cond
+        #cond = np.concatenate(alist,axis=0)
+        return alist
     
     def _process_data_dir(self, 
                           im_dir, 
