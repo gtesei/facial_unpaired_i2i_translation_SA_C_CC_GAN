@@ -143,7 +143,7 @@ class C_CC_GAN():
                 elapsed_time = datetime.datetime.now() - start_time
 
                 try:
-                    if g_loss is not None:
+                    if batch_i % d_g_ratio == 0:
                         print ("[Epoch %d/%d] [Batch %d/%d] [D_gan loss: %f, D_AU_loss: %f] [G_gan loss: %05f, G_AU_loss: %05f, recon: %05f] time: %s " \
                             % ( epoch, epochs,
                                 batch_i, self.data_loader.n_batches,
@@ -160,7 +160,7 @@ class C_CC_GAN():
                     print("*** problem to log ***")
 
                 # log
-                if g_loss is not None:
+                if batch_i % d_g_ratio == 0:
                     epoch_history.append(epoch) 
                     batch_i_history.append(batch_i)
                     d_gan_loss_history.append(d_loss_dict['d_adv_loss'].cpu().detach().numpy())

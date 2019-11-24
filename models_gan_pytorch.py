@@ -61,7 +61,7 @@ def train_D_wasserstein_gp(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,
     d_adv_logits_fake, d_reg_fake = d(fakes_1)
     #
     alpha = torch.rand(batch_size,1,1,1,device=device)
-    x_gp = alpha*x_fake+(1-alpha)*x_real
+    x_gp = alpha*fakes_1+(1-alpha)*x_real
     d_gp,_ = d(x_gp)
     grad = torch.autograd.grad(d_gp.sum(), x_gp, create_graph=True)
     grad_norm = grad[0].reshape(batch_size, -1).norm(dim=1)
