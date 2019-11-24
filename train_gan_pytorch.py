@@ -68,6 +68,11 @@ class C_CC_GAN():
                                                             img_res=(self.img_rows, self.img_cols,self.channels), 
                                                             root_data_path=self.root_data_path,
                                                             normalize=True,
+                                                            csv_columns = ['frame', "AU01_c" , "AU02_c"	 , "AU04_c", 
+                                                                           "AU05_c", "AU06_c",	 "AU07_c", "AU09_c", 	 
+                                                                           "AU10_c",  "AU12_c",  "AU14_c", "AU15_c", 
+                                                                           "AU17_c"	,  "AU20_c"	, "AU23_c",	"AU25_c", 
+                                                                           "AU26_c" ,  "AU45_c"]
                                                             max_images=train_size)
 
         #optimizer = Adam(self.adam_lr, self.adam_beta_1, self.adam_beta_2) 

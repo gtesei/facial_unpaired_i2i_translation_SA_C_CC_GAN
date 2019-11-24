@@ -68,7 +68,8 @@ def train_D_wasserstein_gp(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,
     grad = torch.autograd.grad(d_gp.sum(), x_gp, create_graph=True)
     grad_norm = grad[0].reshape(batch_size, -1).norm(dim=1)
     #
-    d_cl_loss = F.l1_loss(d_reg_true, au)
+    #d_cl_loss = F.l1_loss(d_reg_true, au)
+    d_cl_loss = F.binary_cross_entropy_with_logits(d_reg_true, au)
     d_adv_loss = -d_adv_logits_true.mean() + d_adv_logits_fake.mean()
     d_loss = d_adv_loss+lambda_cl*d_cl_loss+10*((grad_norm - 1)**2).mean()
     d_loss_dict = {'d_adv_loss': d_adv_loss , "d_cl_loss": d_cl_loss}
@@ -96,7 +97,8 @@ def train_G_wasserstein_gp(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,
     d_adv_logits_fake, d_reg_fake = d(fakes_1)
     #
     g_adv_loss = -d_adv_logits_fake.mean()
-    g_cl_loss = F.l1_loss(d_reg_fake, des_au_1)
+    #g_cl_loss = F.l1_loss(d_reg_fake, des_au_1)
+    g_cl_loss = F.binary_cross_entropy_with_logits(d_reg_fake, des_au_1)
     rec_loss = F.l1_loss(img_rec, x_real)
     g_loss = g_adv_loss + lambda_cl*g_cl_loss + lambda_cyc*rec_loss
     g_loss_dict = {'g_adv_loss': g_adv_loss , "g_cl_loss": g_cl_loss, "rec_loss": rec_loss}
