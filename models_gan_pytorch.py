@@ -52,7 +52,8 @@ def train_D_wasserstein_gp(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,
     batch_size = x_real.shape[0]
     #
     dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor 
-    des_au_1 = torch.tensor(data_loader.gen_rand_cond(batch_size=batch_size)).to(device).type(dtype)
+    #des_au_1 = torch.tensor(data_loader.gen_rand_cond(batch_size=batch_size)).to(device).type(dtype)
+    des_au_1 = data_loader.gen_rand_cond_for_binary_au(au.cpu().detach().numpy()).to(device).type(dtype)
     ##
     z = g.encode(x_real)
     ##
@@ -83,10 +84,11 @@ def train_D_wasserstein_gp(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,
 def train_G_wasserstein_gp(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,device,g_optimizer):
     for p in d.parameters():
         p.requires_grad = False
-    batch_size = x_real.shape[0]
+    #batch_size = x_real.shape[0]
     #
     dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor 
-    des_au_1 = torch.tensor(data_loader.gen_rand_cond(batch_size=batch_size)).to(device).type(dtype)
+    #des_au_1 = torch.tensor(data_loader.gen_rand_cond(batch_size=batch_size)).to(device).type(dtype)
+    des_au_1 = data_loader.gen_rand_cond_for_binary_au(au.cpu().detach().numpy()).to(device).type(dtype)
     ##
     z = g.encode(x_real)
     ##

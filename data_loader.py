@@ -60,6 +60,17 @@ class InMemoryDataLoader():
         cond = np.clip(a=cond,a_min=0,a_max=5)
         return cond
     
+    def gen_rand_cond_for_binary_au(self,bt):
+        au_num = bt.shape[1]
+        alist = [] 
+        for i in range(au_num):
+            _bt = bt.copy()
+            _bt[:,i] = np.ones_like(_bt[:,i]) - _bt[:,i]
+            alist.append(_bt)
+        cond = np.concatenate(alist,axis=0)
+        cond = np.clip(a=cond,a_min=0,a_max=1)
+        return cond
+    
     def _process_data_dir(self, 
                           im_dir, 
                           other_dir='processed', 
