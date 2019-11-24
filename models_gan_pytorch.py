@@ -57,7 +57,10 @@ def train_D_wasserstein_gp(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,
     ##
     z = g.encode(x_real)
     ##
-    fakes_1 = g.translate_decode(z,des_au_1)
+    z2 = []
+    for _z in z:
+        z2.append(_z.repeat(au.shape[1],1))
+    fakes_1 = g.translate_decode(z2,des_au_1)
     #img_rec = g.translate_decode(z,au)
     #
     d_adv_logits_true, d_reg_true = d(x_real)
@@ -92,7 +95,10 @@ def train_G_wasserstein_gp(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,
     ##
     z = g.encode(x_real)
     ##
-    fakes_1 = g.translate_decode(z,des_au_1)
+    z2 = []
+    for _z in z:
+        z2.append(_z.repeat(au.shape[1],1))
+    fakes_1 = g.translate_decode(z2,des_au_1)
     img_rec = g.translate_decode(z,au)
     #
     #d_adv_logits_true, d_reg_true = d(x_real)

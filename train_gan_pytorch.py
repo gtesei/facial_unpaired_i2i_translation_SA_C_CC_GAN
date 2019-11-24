@@ -72,7 +72,7 @@ class C_CC_GAN():
                                                                            "AU05_c", "AU06_c",	 "AU07_c", "AU09_c", 	 
                                                                            "AU10_c",  "AU12_c",  "AU14_c", "AU15_c", 
                                                                            "AU17_c"	,  "AU20_c"	, "AU23_c",	"AU25_c", 
-                                                                           "AU26_c" ,  "AU45_c"]
+                                                                           "AU26_c" ,  "AU45_c"], 
                                                             max_images=train_size)
 
         #optimizer = Adam(self.adam_lr, self.adam_beta_1, self.adam_beta_2) 
@@ -201,8 +201,8 @@ class C_CC_GAN():
             labels0_d, imgs_d = torch.tensor(labels0).to(device).type(dtype), torch.tensor(imgs_d).to(device).type(dtype)
             #gan_pred_prob,au_prob = self.d(imgs_d)
             #des_au_1 = torch.tensor(self.data_loader.gen_rand_cond(batch_size=1)).to(device).type(dtype)
-            #des_au_1 = data_loader.gen_rand_cond_for_binary_au(au.cpu().detach().numpy()).to(device).type(dtype)
-            des_au_1 = torch.tensor(data_loader.gen_rand_cond_for_binary_au(au.cpu().detach().numpy())).to(device).type(dtype)
+            des_au_1 = data_loader.gen_rand_cond_for_binary_au(au.cpu().detach().numpy()).to(device).type(dtype)
+            #des_au_1 = torch.tensor(data_loader.gen_rand_cond_for_binary_au(au.cpu().detach().numpy())).to(device).type(dtype)
             
             # Translate images 
             zs = self.g.encode(imgs_d)
