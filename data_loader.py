@@ -53,10 +53,11 @@ class InMemoryDataLoader():
         ## load dataset 
         self._load_internally()
         
-    def gen_rand_cond(self,batch_size=1):
+    def gen_rand_cond(self,batch_size=1,add_noise=False):
         idx = np.random.choice(self.lab_vect.shape[0],size=batch_size)
         cond = self.lab_vect[idx]
-        cond += np.random.uniform(-0.1, 0.1, cond.shape)
+        if add_noise: 
+            cond += np.random.uniform(-0.1, 0.1, cond.shape)
         cond = np.clip(a=cond,a_min=0,a_max=5)
         return cond
     
@@ -179,7 +180,7 @@ if __name__ == '__main__':
                   row_titles=[0,.33],
                   col_titles=['AU1','AU2','AU3','AU4'],
                   nrow = 2,ncol = 4,save_filename='data_loader_test_2')
-    for batch_i, (labels , batch_images) in enumerate(dl.load_batch(batch_size=2)):
+    for batch_i, (labels , batch_images) in enumerate(dl.load_batch(batch_size=5)):
         al = dl.gen_rand_cond_for_binary_au(labels)
         print(al)
         print("len",len(al),al[0].shape)
