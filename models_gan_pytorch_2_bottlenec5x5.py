@@ -64,7 +64,7 @@ def train_D_wasserstein_gp(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,
     d_adv_logits_fake, d_reg_fake = d(fakes_1)
     #
     alpha = torch.rand(batch_size,1,1,1,device=device)
-    x_gp = alpha*_fakes_1+(1-alpha)*x_real
+    x_gp = alpha*fakes_1+(1-alpha)*x_real
     d_gp,_ = d(x_gp)
     grad = torch.autograd.grad(d_gp.sum(), x_gp, create_graph=True)
     grad_norm = grad[0].reshape(batch_size, -1).norm(dim=1)
@@ -84,7 +84,7 @@ def train_D_wasserstein_gp(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,
 def train_G_wasserstein_gp(g, d, x_real, au, lambda_cl, lambda_cyc, data_loader,device,g_optimizer):
     for p in d.parameters():
         p.requires_grad = False
-    #batch_size = x_real.shape[0]
+    batch_size = x_real.shape[0]
     #
     dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor 
     des_au_1 = torch.tensor(data_loader.gen_rand_cond(batch_size=batch_size)).to(device).type(dtype)
@@ -310,6 +310,7 @@ if __name__ == '__main__':
     b = torch.rand(5,3,112,112)
     gan_out , au_reg_out  = d.forward(b)
     print("gan_out::",gan_out.shape)
+    print(gan_out)
     print("au_reg_out::",au_reg_out.shape)
     g = Generator(img_shape=(3,112,112),gf=64,AU_num=17)
     print("******** Generator ********")
