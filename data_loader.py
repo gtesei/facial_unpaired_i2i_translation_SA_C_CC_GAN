@@ -160,6 +160,11 @@ if __name__ == '__main__':
                             #path_csv=csv_path,
                             #path_image_dir=img_path, 
                             root_data_path=root_data_path, 
+                            csv_columns = ['frame', "AU01_c" , "AU02_c"	 , "AU04_c", 
+                                                                           "AU05_c", "AU06_c",	 "AU07_c", "AU09_c", 	 
+                                                                           "AU10_c",  "AU12_c",  "AU14_c", "AU15_c", 
+                                                                           "AU17_c"	,  "AU20_c"	, "AU23_c",	"AU25_c", 
+                                                                           "AU26_c" ,  "AU45_c"], 
                             max_images=12)
     ## 
     print(dl.gen_rand_cond(batch_size=2).shape)
@@ -174,8 +179,11 @@ if __name__ == '__main__':
                   row_titles=[0,.33],
                   col_titles=['AU1','AU2','AU3','AU4'],
                   nrow = 2,ncol = 4,save_filename='data_loader_test_2')
-    for batch_i, (labels , batch_images) in enumerate(dl.load_batch(batch_size=1)):
-        pass
+    for batch_i, (labels , batch_images) in enumerate(dl.load_batch(batch_size=2)):
+        al = dl.gen_rand_cond_for_binary_au(labels)
+        print(al)
+        print("len",len(al),al[0].shape)
+        break 
     
     
     
