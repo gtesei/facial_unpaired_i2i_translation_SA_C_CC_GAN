@@ -180,10 +180,12 @@ if __name__ == '__main__':
                   row_titles=[0,.33],
                   col_titles=['AU1','AU2','AU3','AU4'],
                   nrow = 2,ncol = 4,save_filename='data_loader_test_2')
-    for batch_i, (labels , batch_images) in enumerate(dl.load_batch(batch_size=5)):
+    for batch_i, (labels , batch_images) in enumerate(dl.load_batch(batch_size=3)):
         al = dl.gen_rand_cond_for_binary_au(labels)
         print(al)
         print("len",len(al),al[0].shape)
+        al = dl.gen_rand_cond(3)
+        print("***********",al)
         break 
     
     
