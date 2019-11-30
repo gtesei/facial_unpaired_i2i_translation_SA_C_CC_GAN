@@ -29,6 +29,8 @@ from sklearn.metrics import accuracy_score
 from models_gan_pytorch_4  import *
 from utils import * 
 
+from FID import * 
+
 
 # reproducibility
 torch.manual_seed(777)
@@ -190,6 +192,7 @@ class C_CC_GAN():
                         self.g.eval()
                         self.sample_images(epoch, batch_i)
                         #self.sample_images(epoch, batch_i,use_leo=True)
+                        fis_dict = self.measure_fis(epoch,sample_size=1000)
                         self.g.train()
 
                     train_history = pd.DataFrame({
@@ -199,7 +202,11 @@ class C_CC_GAN():
                         'd_AU_loss': d_au_loss_history, 
                         'g_gan_loss': g_gan_loss_history, 
                         'g_AU_loss': g_au_loss_history, 
-                        'reconstr_loss': reconstr_history
+                        'reconstr_loss': reconstr_history, 
+                        'fid_joy': fis_dict['fid_joy'], 
+                        'fid_sadness': fis_dict['fid_sadness'], 
+                        'fid_surprise': fis_dict['fid_surprise'], 
+                        'fid_contempt': fis_dict['fid_contempt']
                     })
                     train_history.to_csv(str(sys.argv[0]).split('.')[0]+'_train_log.csv',index=False)
                 # save 
@@ -207,7 +214,30 @@ class C_CC_GAN():
                     adir = os.path.join('saved_models', str(sys.argv[0]).split('.')[0], 'checkpoint')
                     if not os.path.exists(adir):
                         os.makedirs(adir)
-                    self.save(os.path.join(adir,'weights.{:d}.pth'.format(epoch)))
+                    #self.save(os.path.join(adir,'weights.{:d}.pth'.format(epoch)))
+                    self.save(os.path.join(adir,'weights.pth'))
+    
+    def measure_fis(self, epoch,sample_size=1000,emotions = ["joy", "sadness", "surprise", "contempt"]):
+        fis_dict = {}
+        for batch_i, (labels0 , imgs) in enumerate(self.data_loader.load_batch(batch_size=batch_size)):
+                imgs = np.transpose(imgs,(0,3,1,2))
+                dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor 
+                labels0, imgs = torch.tensor(labels0).to(device).type(dtype), torch.tensor(imgs).to(device).type(dtype)
+                zs = self.g.encode(imgs)
+                for em in emotions:
+                    print("****",em,"****")
+                    idx = self.a2e.get_idx(self.data_loader.lab_vect,emotion=emotion)
+                    images = self.data_loader.img_vect[idx.squeeze()]
+                    images = images[0:batch_size]
+                    #
+                    au_em = self.a2e.emotion2aus(em,batch_size)
+                    au_em = torch.tensor(au_em).to(device).type(dtype)
+                    emo_img = self.g.decode(zs,au_em)
+                    fid_value = calculate_fid(images, emo_img, False, 16)
+                    #
+                    fis_dict['fid_'+em] = fid_value
+                break 
+            return fis_dict
     
     def save(self, path):
         states = {
@@ -249,7 +279,7 @@ class C_CC_GAN():
             zs = self.g.encode(imgs_d)
             
             # Reconstruct image
-            print("labels0_d",labels0_d.shape)
+            #print("labels0_d",labels0_d.shape)
             reconstr_ = self.g.decode(zs,labels0_d)
 
             # Transl. image 
@@ -323,7 +353,7 @@ class C_CC_GAN():
                         au_em = self.a2e.emotion2aus(emotions[n-1],1)
                         au_em = torch.tensor(au_em).to(device).type(dtype)
                         #
-                        print("au_em",au_em.shape)
+                        #print("au_em",au_em.shape)
                         emo_img = self.g.decode(zs,au_em)
                         emo_img = emo_img.cpu()
                         emo_img = np.transpose(emo_img.detach().numpy(),(0,2,3,1))
