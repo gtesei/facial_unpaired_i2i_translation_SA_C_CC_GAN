@@ -15,6 +15,8 @@ import glob
 import os
 from scipy import linalg
 
+from data_loader import * 
+
 
 def to_cuda(elements):
     """
@@ -277,13 +279,28 @@ if __name__ == "__main__":
     parser.add_option("-b", "--batch-size", dest="batch_size", default=32, 
                       help="Set batch size to use for InceptionV3 network",
                       type=int)
-    
+    ###
+    data_loader = InMemoryDataLoader(dataset_name='EmotioNet',
+                                                            img_res=(112, 112,3), 
+                                                            root_data_path="datasets",
+                                                            normalize=True,
+                                                            csv_columns = ['frame', "AU01_c" , "AU02_c"	 , "AU04_c", 
+                                                                           "AU05_c", "AU06_c",	 "AU07_c", "AU09_c", 	 
+                                                                           "AU10_c",  "AU12_c",  "AU14_c", "AU15_c", 
+                                                                           "AU17_c"	,  "AU20_c"	, "AU23_c",	"AU25_c", 
+                                                                           "AU26_c" ,  "AU45_c"], 
+                                                            max_images=-1)
     options, _ = parser.parse_args()
     assert options.path1 is not None, "--path1 is an required option"
     assert options.path2 is not None, "--path2 is an required option"
     assert options.batch_size is not None, "--batch_size is an required option"
-    images1 = load_images(options.path1)[:options.max_img]
-    images2 = load_images(options.path2)[:options.max_img]
+    #images1 = load_images(options.path1)[:options.max_img]
+    #images2 = load_images(options.path2)[:options.max_img]
+    a2e = AU2Emotion()
+    idx = a2e.get_idx(dl.lab_vect,emotion='joy')
+    images = dl.img_vect[idx.squeeze()]
+    images1 = images[0:int(images/2)]
+    images2 = images[:int(images/2)]
     print("images1",images1.shape)
     print("images2",images2.shape)
     fid_value = calculate_fid(images1, images2, options.use_multiprocessing, options.batch_size)
