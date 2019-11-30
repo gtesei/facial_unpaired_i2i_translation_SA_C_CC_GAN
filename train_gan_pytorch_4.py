@@ -248,7 +248,8 @@ class C_CC_GAN():
             # Translate images 
             zs = self.g.encode(imgs_d)
             
-            # Reconstruct image 
+            # Reconstruct image
+            print("labels0_d",labels0_d.shape)
             reconstr_ = self.g.decode(zs,labels0_d)
 
             # Transl. image 
@@ -320,7 +321,9 @@ class C_CC_GAN():
                 for c in range(n_col):
                     if n > 0: 
                         au_em = self.a2e.emotion2aus(emotions[n-1],1)
+                        au_em = torch.tensor(au_em).to(device).type(dtype)
                         #
+                        print("au_em",au_em.shape)
                         emo_img = self.g.decode(zs,au_em)
                         emo_img = emo_img.cpu()
                         emo_img = np.transpose(emo_img.detach().numpy(),(0,2,3,1))
