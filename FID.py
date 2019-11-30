@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Nov 29 21:15:32 2019
-
-@author: gtesei
+https://github.com/mseitzer/pytorch-fid/blob/master/fid_score.py
 """
 
 import torch

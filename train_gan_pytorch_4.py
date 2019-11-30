@@ -219,25 +219,31 @@ class C_CC_GAN():
     
     def measure_fis(self, epoch,sample_size=1000,emotions = ["joy", "sadness", "surprise", "contempt"]):
         fis_dict = {}
-        for batch_i, (labels0 , imgs) in enumerate(self.data_loader.load_batch(batch_size=batch_size)):
+        for batch_i, (labels0 , imgs) in enumerate(self.data_loader.load_batch(batch_size=sample_size)):
                 imgs = np.transpose(imgs,(0,3,1,2))
                 dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor 
                 labels0, imgs = torch.tensor(labels0).to(device).type(dtype), torch.tensor(imgs).to(device).type(dtype)
                 zs = self.g.encode(imgs)
                 for em in emotions:
                     print("****",em,"****")
-                    idx = self.a2e.get_idx(self.data_loader.lab_vect,emotion=emotion)
+                    idx = self.a2e.get_idx(self.data_loader.lab_vect,emotion=em)
                     images = self.data_loader.img_vect[idx.squeeze()]
-                    images = images[0:batch_size]
+                    images = images[0:sample_size]
                     #
-                    au_em = self.a2e.emotion2aus(em,batch_size)
+                    au_em = self.a2e.emotion2aus(em,sample_size)
                     au_em = torch.tensor(au_em).to(device).type(dtype)
                     emo_img = self.g.decode(zs,au_em)
+                    emo_img = torch.clamp(emo_img, min=0, max=1000)
+                    emo_img = emo_img.cpu().detach().numpy()
+                    emo_img = np.transpose(emo_img,(0,2,3,1))
+                    print("images",images.shape)
+                    print("emo_img",emo_img.shape)
                     fid_value = calculate_fid(images, emo_img, False, 16)
+                    print("fid_value",fid_value)
                     #
                     fis_dict['fid_'+em] = fid_value
                 break 
-            return fis_dict
+        return fis_dict
     
     def save(self, path):
         states = {
