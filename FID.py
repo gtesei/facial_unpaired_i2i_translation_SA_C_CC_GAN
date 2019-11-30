@@ -17,6 +17,29 @@ from scipy import linalg
 
 from data_loader import * 
 
+#joy - 12.505698407245774 ... same set -1.9598010140953193e-05
+
+# **** joy ****
+# images1 (1000, 112, 112, 3)      images2 (1000, 112, 112, 3)
+# 12.505698407245774
+# **** sadness ****
+# images1 (915, 112, 112, 3)      images2 (916, 112, 112, 3)
+# 16.346479849543982
+# **** surprise ****
+# images1 (805, 112, 112, 3)      images2 (805, 112, 112, 3)
+# 16.463141896696612
+# **** fear ****
+# images1 (8, 112, 112, 3)      images2 (8, 112, 112, 3)
+# 150.61842751763265
+# **** anger ****
+# images1 (51, 112, 112, 3)      images2 (52, 112, 112, 3)
+# 70.67585276425808
+# **** contempt ****
+# images1 (1000, 112, 112, 3)      images2 (1000, 112, 112, 3)
+# 12.155819860442676
+
+
+
 
 def to_cuda(elements):
     """
@@ -276,20 +299,20 @@ if __name__ == "__main__":
     parser.add_option("-m", "--max-img", dest="max_img", default=1000,
                                             help="Max number of images to load per dir",
                                             type=int) 
-    parser.add_option("-b", "--batch-size", dest="batch_size", default=32, 
+    parser.add_option("-b", "--batch-size", dest="batch_size", default=16, 
                       help="Set batch size to use for InceptionV3 network",
                       type=int)
     ###
-    data_loader = InMemoryDataLoader(dataset_name='EmotioNet',
-                                                            img_res=(112, 112,3), 
-                                                            root_data_path="datasets",
-                                                            normalize=True,
-                                                            csv_columns = ['frame', "AU01_c" , "AU02_c"	 , "AU04_c", 
-                                                                           "AU05_c", "AU06_c",	 "AU07_c", "AU09_c", 	 
-                                                                           "AU10_c",  "AU12_c",  "AU14_c", "AU15_c", 
-                                                                           "AU17_c"	,  "AU20_c"	, "AU23_c",	"AU25_c", 
-                                                                           "AU26_c" ,  "AU45_c"], 
-                                                            max_images=-1)
+    dl = InMemoryDataLoader(dataset_name='EmotioNet',
+                            img_res=(112, 112,3), 
+                            root_data_path="datasets",
+                            normalize=True,
+                            csv_columns = ['frame', "AU01_c" , "AU02_c"	 , "AU04_c", 
+                                           "AU05_c", "AU06_c",	 "AU07_c", "AU09_c", 	 
+                                           "AU10_c",  "AU12_c",  "AU14_c", "AU15_c", 
+                                           "AU17_c"	,  "AU20_c"	, "AU23_c",	"AU25_c", 
+                                           "AU26_c" ,  "AU45_c"], 
+                            max_images=-1)
     options, _ = parser.parse_args()
     assert options.path1 is not None, "--path1 is an required option"
     assert options.path2 is not None, "--path2 is an required option"
@@ -297,11 +320,18 @@ if __name__ == "__main__":
     #images1 = load_images(options.path1)[:options.max_img]
     #images2 = load_images(options.path2)[:options.max_img]
     a2e = AU2Emotion()
-    idx = a2e.get_idx(dl.lab_vect,emotion='joy')
-    images = dl.img_vect[idx.squeeze()]
-    images1 = images[0:int(images/2)]
-    images2 = images[:int(images/2)]
-    print("images1",images1.shape)
-    print("images2",images2.shape)
-    fid_value = calculate_fid(images1, images2, options.use_multiprocessing, options.batch_size)
-    print(fid_value)
+    emolist =  list(a2e.emotion2au.keys())
+    for emotion in emolist:
+        print("****",emotion,"****")
+        idx = a2e.get_idx(dl.lab_vect,emotion=emotion)
+        images = dl.img_vect[idx.squeeze()]
+        if len(images) > 2 * options.max_img:
+            images1 = images[0:options.max_img]
+            images2 = images[options.max_img:2*options.max_img]
+        else:
+            images1 = images[:int(len(images)/2)]
+            images2 = images[int(len(images)/2):]
+        print("images1",images1.shape,"     images2",images2.shape)
+        fid_value = calculate_fid(images1, images2, options.use_multiprocessing, options.batch_size)
+        print(fid_value)
+        torch.cuda.empty_cache()

@@ -28,7 +28,7 @@ class AU2Emotion():
                            "surprise": [1, 2, 5, 26],
                            "fear": [1,2,4,5,7,20,26],
                            "anger": [4, 5, 7, 23],
-                           "disgust": [9,15,16],
+                           #"disgust": [9,15,16],
                            "contempt": [12,14]}
     
     def emotion2aus(self,emotion,batch_size):
