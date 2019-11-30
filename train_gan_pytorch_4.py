@@ -9,7 +9,7 @@ import functools
 import datetime
 import matplotlib.pyplot as plt
 import sys
-from data_loader import InMemoryDataLoader
+from data_loader import *
 import numpy as np
 import pandas as pd 
 import os
@@ -34,6 +34,7 @@ from utils import *
 torch.manual_seed(777)
 np.random.seed(777)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        
 
 class C_CC_GAN():
     def __init__(self, root_data_path, train_size=-1,
@@ -275,7 +276,7 @@ class C_CC_GAN():
                           col_titles=["Orig.[ep:%d]" % (epoch),'Transl.'],
                           nrow = 1,ncol = 2,
                           save_filename="log_images/translat_%d_%d.png" % (epoch, batch_i))
-            ####
+            #### AU 
             n_row = 4 # alpha 
             n_col = 9 # AUs 
             col_names = ['AU1_r','AU2_r','AU4_r','AU5_r','AU10_r',
@@ -307,6 +308,10 @@ class C_CC_GAN():
                           col_titles=col_names_plot,
                           nrow = n_row,ncol = n_col,
                           save_filename="log_images/au_edition_%d_%d.png" % (epoch, batch_i))
+            
+            #### 
+            n_row = 2 #  
+            n_col = 4 # AUs 
             break 
 
 

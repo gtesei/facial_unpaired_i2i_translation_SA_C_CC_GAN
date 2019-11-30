@@ -9,6 +9,43 @@ from utils import *
 from os import listdir 
 from os.path import isfile, join, isdir     
 
+
+class AU2Emotion():
+    #https://imotions.com/blog/facial-action-coding-system/
+    def __init__(self):
+        self.aus =        ["AU01_c" , "AU02_c"	 , "AU04_c", 
+                           "AU05_c", "AU06_c",	 "AU07_c", "AU09_c", 	 
+                           "AU10_c",  "AU12_c",  "AU14_c", "AU15_c", 
+                           "AU17_c"	,  "AU20_c"	, "AU23_c",	"AU25_c", 
+                           "AU26_c" ,  "AU45_c"]
+        self.au2idx = {1:0, 2:1, 4:2, 
+                       5:3, 6:4, 7:5, 9:6, 
+                       10:7, 12:8, 14:9, 15:10, 
+                       17:11, 20:12, 23:13, 25:14, 
+                       26:15, 45:17}
+        self.emotion2au = {"joy": [6,12],
+                           "sadness": [1, 4, 15],
+                           "surprise": [1, 2, 5, 26],
+                           "fear": [1,2,4,5,7,20,26],
+                           "anger": [4, 5, 7, 23],
+                           "disgust": [9,15,16],
+                           "contempt": [12,14]}
+    
+    def emotion2aus(self,emotion,batch_size):
+        au_list = self.emotion2au[emotion]
+        au_list_idx = [self.au2idx[i] for i in au_list]
+        au_vect = np.zeros((batch_size,len(self.aus)))
+        for i in range(len(self.aus)):
+            if i in au_list_idx:
+                au_vect[:,i] = 1 
+        return au_vect
+    def get_idx(self,lab_vect,emotion):
+        au_list = self.emotion2au[emotion]
+        au_list_idx = [self.au2idx[i] for i in au_list]
+        idx = np.argwhere(np.take(lab_vect,au_list_idx,axis=1).sum(axis=1)==len(au_list_idx))
+        return idx 
+    
+    
 def get_00000_num(num):
     if num < 10:
         return '00000'+str(num)
@@ -187,6 +224,23 @@ if __name__ == '__main__':
         al = dl.gen_rand_cond(3)
         print("***********",al)
         break 
+    ## 
+    a2e = AU2Emotion()
+    for batch_i, (labels , batch_images) in enumerate(dl.load_batch(batch_size=8)):
+        _labels = ["orig."]+list(a2e.emotion2au.keys())
+        plot_grid(batch_images,
+                  #row_titles=[0,.33],
+                  col_titles=_labels,
+                  nrow = 1,ncol = 8,save_filename=None)
+        break 
+    joy = a2e.emotion2aus('joy',1).reshape(17)
+    dl.lab_vect[dl.lab_vect==a2e.emotion2aus('joy',1)]
+    idx = a2e.get_idx(dl.lab_vect,emotion='joy')
+    joy_img = dl.lab_vect[idx]
+    plot_grid(dl.img_vect[idx.squeeze(),:,:,:],
+                  #row_titles=[0,.33],
+                  col_titles=None,
+                  nrow = 1,ncol = 7,save_filename=None)
     
     
     
