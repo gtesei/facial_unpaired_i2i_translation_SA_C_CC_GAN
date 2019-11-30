@@ -17,8 +17,8 @@ from scipy import linalg
 
 from data_loader import * 
 
-#joy - 12.505698407245774 ... same set -1.9598010140953193e-05
-
+# joy - 12.505698407245774 ... same set -1.9598010140953193e-05
+# lab_vect:: (128580, 17) 
 # **** joy ****
 # images1 (1000, 112, 112, 3)      images2 (1000, 112, 112, 3)
 # 12.505698407245774
@@ -314,6 +314,7 @@ if __name__ == "__main__":
                                            "AU17_c"	,  "AU20_c"	, "AU23_c",	"AU25_c", 
                                            "AU26_c" ,  "AU45_c"], 
                             max_images=-1)
+    print("lab_vect::",dl.lab_vect.shape)
     options, _ = parser.parse_args()
     assert options.path1 is not None, "--path1 is an required option"
     assert options.path2 is not None, "--path2 is an required option"
