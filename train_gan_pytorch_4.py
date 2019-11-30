@@ -77,6 +77,8 @@ class C_CC_GAN():
                                                             max_images=train_size)
 
         #optimizer = Adam(self.adam_lr, self.adam_beta_1, self.adam_beta_2) 
+        
+        self.a2e = AU2Emotion()
 
         # Build and compile the discriminators
         self.d = Discriminator(
@@ -296,7 +298,6 @@ class C_CC_GAN():
                     act_au = self.g.decode(zs,au_n)
                     act_au = act_au.cpu()
                     act_au = np.transpose(act_au.detach().numpy(),(0,2,3,1))
-                    act_au = act_au
                     img_tens[n,:] = act_au
                     n += 1 
             #plot    
@@ -309,9 +310,27 @@ class C_CC_GAN():
                           nrow = n_row,ncol = n_col,
                           save_filename="log_images/au_edition_%d_%d.png" % (epoch, batch_i))
             
-            #### 
-            n_row = 2 #  
-            n_col = 4 # AUs 
+            #### joy, sadness, surprise, contempt
+            n_row = 1 #  
+            n_col = 5 # 
+            emotions = ["joy", "sadness", "surprise", "contempt"]
+            em_images = np.repeat(imgs,n_row*n_col,axis=0)
+            n = 0 
+            for r in range(n_row):
+                for c in range(n_col):
+                    if n > 0: 
+                        au_em = self.a2e.emotion2aus(emotions[n-1],1)
+                        #
+                        emo_img = self.g.decode(zs,au_em)
+                        emo_img = emo_img.cpu()
+                        emo_img = np.transpose(emo_img.detach().numpy(),(0,2,3,1))
+                        em_images[n,:] = emo_img
+                    n += 1 
+            col_names = ["Orig.", "Joy", "Sadness", "Surprise", "Contempt"]
+            plot_grid(em_images,
+                  #row_titles=[0,.33],
+                  col_titles=col_names,
+                  nrow = 1,ncol = 5,save_filename="log_images/emotion_trans_%d_%d.png" % (epoch, batch_i))
             break 
 
 
