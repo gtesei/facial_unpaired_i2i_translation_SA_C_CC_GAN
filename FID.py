@@ -170,6 +170,7 @@ def preprocess_image(im):
     Return:
         im: torch.tensor, shape: (3, 299, 299), dtype: torch.float32 between 0-1
     """
+    #print(im.shape)
     assert im.shape[2] == 3
     assert len(im.shape) == 3
     if im.dtype == np.uint8:
@@ -244,7 +245,7 @@ def load_images(path):
         print("Looking for images in", os.path.join(path, "*.{}".format(ext)))
         for impath in glob.glob(os.path.join(path, "*.{}".format(ext))):
             image_paths.append(impath)
-    print(image_paths,len(image_paths))
+    #print(image_paths,len(image_paths))
     first_image = cv2.imread(image_paths[0])
     W, H = first_image.shape[:2]
     image_paths.sort()
@@ -253,6 +254,7 @@ def load_images(path):
     for idx, impath in enumerate(image_paths):
         im = cv2.imread(impath)
         im = im[:, :, ::-1] # Convert from BGR to RGB
+        #im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
         assert im.dtype == final_images.dtype
         final_images[idx] = im
     return final_images
@@ -269,6 +271,9 @@ if __name__ == "__main__":
                       help="Toggle use of multiprocessing for image pre-processing. Defaults to use all cores",
                       default=False,
                       action="store_true")
+    parser.add_option("-m", "--max-img", dest="max_img", default=1000,
+                                            help="Max number of images to load per dir",
+                                            type=int) 
     parser.add_option("-b", "--batch-size", dest="batch_size", default=32, 
                       help="Set batch size to use for InceptionV3 network",
                       type=int)
@@ -277,7 +282,9 @@ if __name__ == "__main__":
     assert options.path1 is not None, "--path1 is an required option"
     assert options.path2 is not None, "--path2 is an required option"
     assert options.batch_size is not None, "--batch_size is an required option"
-    images1 = load_images(options.path1)
-    images2 = load_images(options.path2)
+    images1 = load_images(options.path1)[:options.max_img]
+    images2 = load_images(options.path2)[:options.max_img]
+    print("images1",images1.shape)
+    print("images2",images2.shape)
     fid_value = calculate_fid(images1, images2, options.use_multiprocessing, options.batch_size)
     print(fid_value)

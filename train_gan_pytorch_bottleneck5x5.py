@@ -79,13 +79,13 @@ class C_CC_GAN():
 
         # Build and compile the discriminators
         self.d = Discriminator(img_shape=self.img_shape,df=64,AU_num=self.AU_num).to(device)
-        self.d.init_weights()
+        #self.d.init_weights()
         print("******** Discriminator/Classifier ********")
         print(self.d)
 
         # Build the generators
         self.g = Generator(img_shape=(3,112,112),gf=64,AU_num=self.AU_num).to(device)
-        self.g.init_weights()
+        #xself.g.init_weights()
         print("******** Generator ********")
         print(self.g)
         
@@ -273,7 +273,7 @@ class C_CC_GAN():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train')
-    parser.add_argument('-lambda_cl', help='loss weight for cond. regress. loss', dest='lambda_cl', type=float, default=10)
+    parser.add_argument('-lambda_cl', help='loss weight for cond. regress. loss', dest='lambda_cl', type=float, default=100)
     parser.add_argument('-lambda_cyc', help='reconstr. loss weight', dest='lambda_cyc', type=float, default=10)
     parser.add_argument('-loss_type', help='loss type [loss_nonsaturating] ', dest='loss_type', type=str, default='loss_wasserstein_gp')
     parser.add_argument('-d_g_ratio', help='# train iterations of critic per each train iteration of generator', dest='d_g_ratio', type=int, default=1)
