@@ -207,27 +207,26 @@ class C_CC_GAN():
                 except:
                     print("*** problem to log ***")
 
-                # log
-                if batch_i % d_g_ratio == 0:
-                    epoch_history.append(epoch) 
-                    batch_i_history.append(batch_i)
-                    d_gan_loss_history.append(d_loss_dict['d_adv_loss'].cpu().detach().numpy())
-                    d_au_loss_history.append(d_loss_dict['d_cl_loss'].cpu().detach().numpy())
-                    g_gan_loss_history.append(g_loss_dict['g_adv_loss'].cpu().detach().numpy())
-                    g_au_loss_history.append(g_loss_dict['g_cl_loss'].cpu().detach().numpy())
-                    reconstr_history.append(g_loss_dict['rec_loss'].cpu().detach().numpy())
-
-                # If at save interval => save generated image samples
+                # log & save generated image samples
                 if batch_i % sample_interval == 0:
                     with torch.no_grad():
                         self.g.eval()
                         self.sample_images(epoch, batch_i)
-                        #self.sample_images(epoch, batch_i,use_leo=True)
+                        ##
                         fis_dict = self.measure_fis(epoch,sample_size=1000)
                         fid_joy_history.append(fis_dict['fid_joy'])
                         fid_sadness_history.append(fis_dict['fid_sadness'])
                         fid_surprise_history.append(fis_dict['fid_surprise'])
                         fid_contempt_history.append(fis_dict['fid_contempt'])
+                        ##
+                        epoch_history.append(epoch)
+                        batch_i_history.append(batch_i)
+                        d_gan_loss_history.append(d_loss_dict['d_adv_loss'].cpu().detach().numpy())
+                        d_au_loss_history.append(d_loss_dict['d_cl_loss'].cpu().detach().numpy())
+                        g_gan_loss_history.append(g_loss_dict['g_adv_loss'].cpu().detach().numpy())
+                        g_au_loss_history.append(g_loss_dict['g_cl_loss'].cpu().detach().numpy())
+                        reconstr_history.append(g_loss_dict['rec_loss'].cpu().detach().numpy())
+                        ##
                         self.g.train()
 
                     train_history = pd.DataFrame({
