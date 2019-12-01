@@ -52,15 +52,15 @@ emotion keywords from the Internet and automatically annotated with Action Units
 
 <img src="images/EmotioNet2OpenFace.PNG" align="center" /> 
 
-Here below, the distribution of a sample of 10,753 images processed with OpenFace. 
-
-<img src="images/hist.png" align="center" /> 
-
-~150,000 facial images has been downloaded ([download_images.py](download_images.py)) and re-annotated by using [OpenFace](https://cmusatyalab.github.io/openface/), i.e. 
+Specifically, facial images has been downloaded ([download_images.py](download_images.py)) and re-annotated by using [OpenFace](https://cmusatyalab.github.io/openface/), i.e. 
 
 ```bash 
 FeatureExtraction -fdir images
 ```
+
+Here below, the distribution of a sample of 10,753 images processed with OpenFace. 
+
+<img src="images/hist.png" align="center" /> 
 
 ## Exemplar Results 
 
