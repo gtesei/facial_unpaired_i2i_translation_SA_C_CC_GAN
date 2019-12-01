@@ -213,7 +213,12 @@ class C_CC_GAN():
                         self.g.eval()
                         self.sample_images(epoch, batch_i)
                         ##
-                        fis_dict = self.measure_fis(epoch,sample_size=1000)
+                        try: 
+                            fis_dict = self.measure_fis(epoch,sample_size=1000)
+                        except Exception as e:
+                            print("Exception occurred::",e)
+                            print("Trying again ...")
+                            fis_dict = self.measure_fis(epoch,sample_size=1000)
                         fid_joy_history.append(fis_dict['fid_joy'])
                         fid_sadness_history.append(fis_dict['fid_sadness'])
                         fid_surprise_history.append(fis_dict['fid_surprise'])
