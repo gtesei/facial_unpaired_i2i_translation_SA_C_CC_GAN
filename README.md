@@ -58,6 +58,8 @@ Specifically, facial images has been downloaded ([download_images.py](download_i
 FeatureExtraction -fdir images
 ```
 
+The expected file system structure under the directory ```datasets``` is here below depicted: 
+
 ```
 .
 +-- datasets 
@@ -71,6 +73,8 @@ FeatureExtraction -fdir images
 |  +-- dataFile_1002
 |      ...
 ```
+
+Depending on the experiment, we used from ~60,000 to 200,000 images. 
 
 Here below, the distribution of a sample of 10,753 images processed with OpenFace. 
 
