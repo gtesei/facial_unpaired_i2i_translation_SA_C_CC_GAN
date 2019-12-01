@@ -25,26 +25,6 @@ by a continuous vector, leading to deep implications.
     $ git https://github.com/gtesei/facial_unpaired_i2i_translation_SA_C_CC_GAN
     $ cd facial_unpaired_i2i_translation_SA_C_CC_GAN/
     $ sudo pip3 install -r requirements.txt
-
-## Train
-    $ python train.py
-    
-    # Defaults
-    $ python train.py \
-        -d_gan_loss_w 1 \
-        -d_cl_loss_w 1 \
-        -g_gan_loss_w 2 \
-        -g_cl_loss_w 2 \
-        -rec_loss_w 1  \
-        -adam_lr 0.0002 \
-        -adam_beta_1 0.5 \
-        -adam_beta_2 0.999 \
-        -epochs EPOCHS  170   \
-        -batch_size 64   \
-        -sample_interval 200 \
-        
-    # Usage
-    $ python train.py -h
     
 ## Dataset 
 We adopt [EmotioNet](https://ieeexplore.ieee.org/abstract/document/7780969), which consists in over 1 million images of facial expressions with associated 
@@ -74,11 +54,31 @@ The expected file system structure under the directory ```datasets``` is here be
 |      ...
 ```
 
-Depending on the experiment, we used from ~60,000 to 200,000 images. 
+Depending on the experiment, we used from 60,000 to 200,000 images. 
 
 Here below, the distribution of a sample of 10,753 images processed with OpenFace. 
 
 <img src="images/hist.png" align="center" /> 
+
+## Train -- TODO better 
+    $ python train.py
+    
+    # Defaults
+    $ python train.py \
+        -d_gan_loss_w 1 \
+        -d_cl_loss_w 1 \
+        -g_gan_loss_w 2 \
+        -g_cl_loss_w 2 \
+        -rec_loss_w 1  \
+        -adam_lr 0.0002 \
+        -adam_beta_1 0.5 \
+        -adam_beta_2 0.999 \
+        -epochs EPOCHS  170   \
+        -batch_size 64   \
+        -sample_interval 200 \
+        
+    # Usage
+    $ python train.py -h
 
 ## Exemplar Results 
 
