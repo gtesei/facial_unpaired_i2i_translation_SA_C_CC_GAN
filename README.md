@@ -56,6 +56,14 @@ Here below, the distribution of a sample of 10,753 images processed with OpenFac
 
 <img src="images/hist.png" align="center" /> 
 
+~150,000 facial images has been downloaded ([download_images.py](download_images.py)) and re-annotated by using [OpenFace](https://cmusatyalab.github.io/openface/), i.e. 
+
+```bash 
+FeatureExtraction -fdir images
+```
+
+## Exemplar Results 
+
 
 ## Experiment Log
 
