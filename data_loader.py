@@ -167,12 +167,15 @@ class InMemoryDataLoader():
             print("lab_vect::",lab_vect.shape,"  -- img_vect::",img_vect.shape)
         else:
             raise Exception("dataset not supported:"+str(self.dataset_name))
-
+        
+    def n_batches(self,batch_size):
+        return int(len(self.img_vect) / batch_size)
+    
     def load_batch(self, batch_size=1, flip_prob=0, is_testing=False):
         if is_testing:
             raise Exception("not supported yet!")
-        self.n_batches = int(len(self.img_vect) / batch_size)
-        for i in range(self.n_batches):
+        n_batches = self.n_batches(batch_size)
+        for i in range(n_batches):
             idx = np.random.choice(self.lab_vect.shape[0],size=batch_size)
             #print("idx",idx)
             batch_images = self.img_vect[idx]

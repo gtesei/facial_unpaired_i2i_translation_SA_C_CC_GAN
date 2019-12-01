@@ -77,7 +77,7 @@ class C_CC_GAN():
                                                                            "AU17_c"	,  "AU20_c"	, "AU23_c",	"AU25_c", 
                                                                            "AU26_c" ,  "AU45_c"], 
                                                             max_images=train_size)
-
+        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> N. images loaded::",len(self.data_loader.lab_vect),"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
         #optimizer = Adam(self.adam_lr, self.adam_beta_1, self.adam_beta_2) 
         
         self.a2e = AU2Emotion()
@@ -150,7 +150,7 @@ class C_CC_GAN():
         self.g.train()
         self.d.train()
 
-        for epoch in range(epochs-epoch_restart):
+        for epoch in range(epoch_restart,epochs):
             for batch_i, (labels0 , imgs) in enumerate(self.data_loader.load_batch(batch_size=batch_size)):
                 imgs = np.transpose(imgs,(0,3,1,2))
                 dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor 
@@ -194,14 +194,14 @@ class C_CC_GAN():
                     if batch_i % d_g_ratio == 0:
                         print ("[Epoch %d/%d] [Batch %d/%d] [D_gan loss: %f, D_AU_loss: %f] [G_gan loss: %05f, G_AU_loss: %05f, recon: %05f] time: %s " \
                             % ( epoch, epochs,
-                                batch_i, self.data_loader.n_batches,
+                                batch_i, self.data_loader.n_batches(batch_size),
                                 d_loss_dict['d_adv_loss'], d_loss_dict['d_cl_loss'],  
                                 g_loss_dict['g_adv_loss'],g_loss_dict['g_cl_loss'], g_loss_dict['rec_loss'],  
                                 elapsed_time))
                     else:
                         print ("[Epoch %d/%d] [Batch %d/%d] [D_gan loss: %f, D_AU_loss: %f] time: %s " \
                             % ( epoch, epochs,
-                                batch_i, self.data_loader.n_batches,
+                                batch_i, self.data_loader.n_batches(batch_size),
                                 d_loss_dict['d_adv_loss'], d_loss_dict['d_cl_loss'],  
                                 elapsed_time))
                 except:
@@ -273,10 +273,11 @@ class C_CC_GAN():
                     emo_img = np.transpose(emo_img,(0,2,3,1))
                     print("images",images.shape)
                     print("emo_img",emo_img.shape)
-                    fid_value = calculate_fid(images, emo_img, False, 16)
+                    fid_value = calculate_fid(images, emo_img, False, 8)
                     print("fid_value",fid_value,type(fid_value))
                     #
                     fis_dict['fid_'+em] = fid_value
+                    torch.cuda.empty_cache()
                 break 
         return fis_dict
     
@@ -331,7 +332,7 @@ class C_CC_GAN():
                 os.makedirs('log_images')
             #plot reconstr_   
             reconstr_ = reconstr_.cpu().detach().numpy()
-            reconstr_ = np.transpose(reconstr_.detach().numpy(),(0,2,3,1))
+            reconstr_ = np.transpose(reconstr_,(0,2,3,1))
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 plot_grid(np.concatenate([imgs, reconstr_]), 
@@ -342,7 +343,7 @@ class C_CC_GAN():
 
             #plot transl_   
             transl_ = transl_.cpu().detach().numpy()
-            transl_ = np.transpose(transl_.detach().numpy(),(0,2,3,1))
+            transl_ = np.transpose(transl_,(0,2,3,1))
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 plot_grid(np.concatenate([imgs, transl_]), 
@@ -369,7 +370,7 @@ class C_CC_GAN():
                     #
                     act_au = self.g.decode(zs,au_n)
                     act_au = act_au.cpu().detach().numpy()
-                    act_au = np.transpose(act_au.detach().numpy(),(0,2,3,1))
+                    act_au = np.transpose(act_au,(0,2,3,1))
                     img_tens[n,:] = act_au
                     n += 1 
             #plot    
@@ -397,7 +398,7 @@ class C_CC_GAN():
                         #print("au_em",au_em.shape)
                         emo_img = self.g.decode(zs,au_em)
                         emo_img = emo_img.cpu().detach().numpy()
-                        emo_img = np.transpose(emo_img.detach().numpy(),(0,2,3,1))
+                        emo_img = np.transpose(emo_img,(0,2,3,1))
                         em_images[n,:] = emo_img
                     n += 1 
             col_names = ["Orig.", "Joy", "Sadness", "Surprise", "Contempt"]
@@ -423,7 +424,7 @@ if __name__ == '__main__':
     parser.add_argument('-save_interval', dest='save_interval', type=int, default=1000)
     parser.add_argument('-root_data_path', help='base file path', dest='root_data_path', type=str, default='datasets')
     parser.add_argument('-train_size', help='train size [-1 for all train data]', dest='train_size', type=int, default=-1)
-    parser.add_argument('-recover_mode', help='recover after crash', dest='recover_mode', type=str, default='yes')
+    parser.add_argument('-recover_mode', help='recover after crash', dest='recover_mode', type=str, default='no')
     args = parser.parse_args()
     
     # print parameters
