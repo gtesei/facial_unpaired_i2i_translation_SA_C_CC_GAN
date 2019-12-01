@@ -44,7 +44,7 @@ class C_CC_GAN():
         AU_num=35,
         lambda_cl=1,lambda_cyc=1,
         loss_type='loss_nonsaturating',
-        adam_lr=0.0002,adam_beta_1=0.5,adam_beta_2=0.999):
+        adam_lr=0.0002,adam_beta_1=0.5,adam_beta_2=0.999,recover_mode=False):
         # paths 
         self.root_data_path = root_data_path 
         # Input shape
@@ -104,8 +104,17 @@ class C_CC_GAN():
         ##
         self.g_optimizer = torch.optim.Adam(self.g.parameters(), self.adam_lr, betas=(self.adam_beta_1, self.adam_beta_2))
         self.d_optimizer = torch.optim.Adam(self.d.parameters(), self.adam_lr, betas=(self.adam_beta_1, self.adam_beta_2))
-
-
+        ## recover_mode
+        self.recover_mode = recover_mode
+        if self.recover_mode:
+            print(">> recover_mode detected ==> loading last saved model ... ")
+            adir = os.path.join('saved_models', str(sys.argv[0]).split('.')[0], 'checkpoint')
+            if os.path.exists(adir):
+                self.load(os.path.join(adir,'weights.pth'))
+            else:
+                raise Exception("recover_mode requires at least one model saved!")
+            
+        
     def train(self, epochs, batch_size=1, sample_interval=50 , save_interval=1000, d_g_ratio=5):
 
         start_time = datetime.datetime.now()
@@ -114,12 +123,34 @@ class C_CC_GAN():
         d_gan_loss_history, d_au_loss_history = [], [],
         g_gan_loss_history, g_au_loss_history = [] , [] 
         reconstr_history = [] 
-
+        #
+        fid_joy_history, fid_sadness_history, fid_surprise_history, fid_contempt_history = [], [] ,[] ,[] 
+        
+        ##
+        if self.recover_mode:
+            print(">> recover_mode detected ==> loading train_history ... ")
+            train_history = pd.read_csv(str(sys.argv[0]).split('.')[0]+'_train_log.csv')
+            epoch_history = train_history['epoch'].tolist()
+            batch_i_history = train_history['batch'].tolist()
+            d_gan_loss_history = train_history['d_gan_loss'].tolist()
+            d_au_loss_history = train_history['d_AU_loss'].tolist()
+            g_gan_loss_history = train_history['g_gan_loss'].tolist()
+            g_au_loss_history = train_history['g_AU_loss'].tolist()
+            reconstr_history = train_history['reconstr_loss'].tolist()
+            fid_joy_history = train_history['fid_joy'].tolist()
+            fid_sadness_history = train_history['fid_sadness'].tolist()
+            fid_surprise_history = train_history['fid_surprise'].tolist()
+            fid_contempt_history = train_history['fid_contempt'].tolist()
+            epoch_restart = epoch_history[-1]
+            batch_i_restart = batch_i_history[-1]
+        else:
+            epoch_restart = 0
+            batch_i_restart = 0
         ##
         self.g.train()
         self.d.train()
 
-        for epoch in range(epochs):
+        for epoch in range(epochs-epoch_restart):
             for batch_i, (labels0 , imgs) in enumerate(self.data_loader.load_batch(batch_size=batch_size)):
                 imgs = np.transpose(imgs,(0,3,1,2))
                 dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor 
@@ -193,6 +224,10 @@ class C_CC_GAN():
                         self.sample_images(epoch, batch_i)
                         #self.sample_images(epoch, batch_i,use_leo=True)
                         fis_dict = self.measure_fis(epoch,sample_size=1000)
+                        fid_joy_history.append(fis_dict['fid_joy'])
+                        fid_sadness_history.append(fis_dict['fid_sadness'])
+                        fid_surprise_history.append(fis_dict['fid_surprise'])
+                        fid_contempt_history.append(fis_dict['fid_contempt'])
                         self.g.train()
 
                     train_history = pd.DataFrame({
@@ -203,10 +238,10 @@ class C_CC_GAN():
                         'g_gan_loss': g_gan_loss_history, 
                         'g_AU_loss': g_au_loss_history, 
                         'reconstr_loss': reconstr_history, 
-                        'fid_joy': fis_dict['fid_joy'], 
-                        'fid_sadness': fis_dict['fid_sadness'], 
-                        'fid_surprise': fis_dict['fid_surprise'], 
-                        'fid_contempt': fis_dict['fid_contempt']
+                        'fid_joy': fid_joy_history, 
+                        'fid_sadness': fid_sadness_history, 
+                        'fid_surprise': fid_surprise_history, 
+                        'fid_contempt': fid_contempt_history
                     })
                     train_history.to_csv(str(sys.argv[0]).split('.')[0]+'_train_log.csv',index=False)
                 # save 
@@ -239,7 +274,7 @@ class C_CC_GAN():
                     print("images",images.shape)
                     print("emo_img",emo_img.shape)
                     fid_value = calculate_fid(images, emo_img, False, 16)
-                    print("fid_value",fid_value)
+                    print("fid_value",fid_value,type(fid_value))
                     #
                     fis_dict['fid_'+em] = fid_value
                 break 
@@ -295,7 +330,7 @@ class C_CC_GAN():
             if not os.path.exists('log_images'):
                 os.makedirs('log_images')
             #plot reconstr_   
-            reconstr_ = reconstr_.cpu()
+            reconstr_ = reconstr_.cpu().detach().numpy()
             reconstr_ = np.transpose(reconstr_.detach().numpy(),(0,2,3,1))
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
@@ -306,7 +341,7 @@ class C_CC_GAN():
                           save_filename="log_images/reconstr_%d_%d.png" % (epoch, batch_i))
 
             #plot transl_   
-            transl_ = transl_.cpu()
+            transl_ = transl_.cpu().detach().numpy()
             transl_ = np.transpose(transl_.detach().numpy(),(0,2,3,1))
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
@@ -333,7 +368,7 @@ class C_CC_GAN():
                     au_n = torch.tensor(au_n).to(device).type(dtype)
                     #
                     act_au = self.g.decode(zs,au_n)
-                    act_au = act_au.cpu()
+                    act_au = act_au.cpu().detach().numpy()
                     act_au = np.transpose(act_au.detach().numpy(),(0,2,3,1))
                     img_tens[n,:] = act_au
                     n += 1 
@@ -361,7 +396,7 @@ class C_CC_GAN():
                         #
                         #print("au_em",au_em.shape)
                         emo_img = self.g.decode(zs,au_em)
-                        emo_img = emo_img.cpu()
+                        emo_img = emo_img.cpu().detach().numpy()
                         emo_img = np.transpose(emo_img.detach().numpy(),(0,2,3,1))
                         em_images[n,:] = emo_img
                     n += 1 
@@ -388,6 +423,7 @@ if __name__ == '__main__':
     parser.add_argument('-save_interval', dest='save_interval', type=int, default=1000)
     parser.add_argument('-root_data_path', help='base file path', dest='root_data_path', type=str, default='datasets')
     parser.add_argument('-train_size', help='train size [-1 for all train data]', dest='train_size', type=int, default=-1)
+    parser.add_argument('-recover_mode', help='recover after crash', dest='recover_mode', type=str, default='yes')
     args = parser.parse_args()
     
     # print parameters
@@ -406,7 +442,8 @@ if __name__ == '__main__':
         AU_num=17,
         lambda_cl=args.lambda_cl,lambda_cyc=args.lambda_cyc,
         loss_type=args.loss_type,
-        adam_lr=args.adam_lr,adam_beta_1=args.adam_beta_1,adam_beta_2=args.adam_beta_2)
+        adam_lr=args.adam_lr,adam_beta_1=args.adam_beta_1,adam_beta_2=args.adam_beta_2,
+        recover_mode=(args.recover_mode=='yes'))
     gan.train(epochs=args.epochs, 
               batch_size=args.batch_size, 
               sample_interval=args.sample_interval,
