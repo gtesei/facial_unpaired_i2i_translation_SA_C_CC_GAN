@@ -64,7 +64,7 @@ Here below, the distribution of a sample of 10,753 images processed with OpenFac
 
 ## Exemplar Results 
 
-### [e8_vers_4_60K]  Train 
+### [e8]  Train 
     $ python train_gan_pytorch_4.py
     
     # Defaults
@@ -86,6 +86,8 @@ Here below, the distribution of a sample of 10,753 images processed with OpenFac
         
     # Usage
     $ python train_gan_pytorch_4.py -h
+    
+It takes ~1 day on a AWS p3.2xlarge. 
     
 ## 60K Train Images 
 
