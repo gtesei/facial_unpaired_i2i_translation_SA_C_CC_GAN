@@ -97,6 +97,13 @@ It takes ~1 day on a AWS p3.2xlarge.
 
 <img src="images/success/vers_4_60K/translat_47_20_____OK_____.png" align="middle" />   <img src="images/success/vers_4_60K/reconstr_136_2000.png.png" align="middle" /> 
 
+## 120K Train Images 
+
+It takes ~4 days on a AWS p3.2xlarge. 
+
+<img src="images/success/vers_4_60K/au_edition_69_0__OK__.png" align="middle" /> 
+
+<img src="images/success/vers_4_60K/emotion_trans_37_0__OK____.png" align="middle" /> <img src="images/success/vers_4_60K/translat_69_OK_.png" align="middle" /> 
 
 ## Experiment Log
 
