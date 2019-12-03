@@ -95,7 +95,7 @@ It takes ~1 day on a AWS p3.2xlarge.
 
 <img src="images/success/vers_4_60K/au_edition_14_2000____OK_____.png" align="middle" /> 
 
-<img src="images/success/vers_4_60K/translat_47_20_____OK_____.png" align="middle" />   <img src="images/GOOD/t24/reconstr_136_2000.png.png" align="middle" /> 
+<img src="images/success/vers_4_60K/translat_47_20_____OK_____.png" align="middle" />   <img src="images/success/vers_4_60K/reconstr_136_2000.png.png" align="middle" /> 
 
 
 ## Experiment Log
