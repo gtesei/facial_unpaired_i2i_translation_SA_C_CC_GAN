@@ -87,9 +87,9 @@ Here below, the distribution of a sample of 10,753 images processed with OpenFac
     # Usage
     $ python train_gan_pytorch_4.py -h
     
-It takes ~1 day on a AWS p3.2xlarge. 
-    
 ## 60K Train Images 
+
+It takes ~1 day on a AWS p3.2xlarge. 
 
 <img src="images/success/vers_4_60K/au_edition_47_2000___OK____.png" align="middle" /> 
 
