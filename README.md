@@ -89,11 +89,11 @@ Here below, the distribution of a sample of 10,753 images processed with OpenFac
     
 ## 60K Train Images 
 
-<img src="images/suiccess/vers_4_60K/au_edition_47_2000___OK____.png" align="middle" /> 
+<img src="images/success/vers_4_60K/au_edition_47_2000___OK____.png" align="middle" /> 
 
-<img src="images/suiccess/vers_4_60K/au_edition_14_2000____OK_____.png" align="middle" /> 
+<img src="images/success/vers_4_60K/au_edition_14_2000____OK_____.png" align="middle" /> 
 
-<img src="images/suiccess/vers_4_60K/translat_47_20_____OK_____.png" align="middle" /> 
+<img src="images/success/vers_4_60K/translat_47_20_____OK_____.png" align="middle" /> 
 
 
 ## Experiment Log
