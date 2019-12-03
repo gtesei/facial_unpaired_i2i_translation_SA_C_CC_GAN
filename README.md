@@ -60,27 +60,40 @@ Here below, the distribution of a sample of 10,753 images processed with OpenFac
 
 <img src="images/hist.png" align="center" /> 
 
-## Train -- TODO better 
-    $ python train.py
+
+
+## Exemplar Results 
+
+### [e8_vers_4_60K]  Train 
+    $ python train_gan_pytorch_4.py
     
     # Defaults
-    $ python train.py \
-        -d_gan_loss_w 1 \
-        -d_cl_loss_w 1 \
-        -g_gan_loss_w 2 \
-        -g_cl_loss_w 2 \
-        -rec_loss_w 1  \
+    $ python train_gan_pytorch_4.py \
+        -lambda_cl 10 \
+        -lambda_cyc 10 \
+        -loss_type loss_wasserstein_gp \
+        -d_g_ratio 1 \
         -adam_lr 0.0002 \
         -adam_beta_1 0.5 \
         -adam_beta_2 0.999 \
-        -epochs EPOCHS  170   \
-        -batch_size 64   \
-        -sample_interval 200 \
+        -epochs 170 \
+        -batch_size 32 \
+        -sample_interval 1000 \
+        -save_interval 1000 \
+        -root_data_path datasets \
+        -train_size -1 \
+        -recover_mode no \
         
     # Usage
-    $ python train.py -h
+    $ python train_gan_pytorch_4.py -h
+    
+## 60K Train Images 
 
-## Exemplar Results 
+<img src="images/suiccess/vers_4_60K/au_edition_47_2000___OK____.png" align="middle" /> 
+
+<img src="images/suiccess/vers_4_60K/au_edition_14_2000____OK_____.png" align="middle" /> 
+
+<img src="images/suiccess/vers_4_60K/translat_47_20_____OK_____.png" align="middle" /> 
 
 
 ## Experiment Log
