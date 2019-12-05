@@ -105,9 +105,11 @@ It takes ~4 days on a AWS p3.2xlarge.
 
 __Improvments over epochs__
 
-<img src="images/success/vers_4_120K/translat_69_OK_.png" align="middle" /> <img src="images/success/vers_4_120K/emotion_trans_97_0.__OK__png.png" align="middle" /> 
+<img src="images/success/vers_4_120K/translat_69_OK_.png" align="middle" /> <img src="images/success/vers_4_120K/translat_119_0_OK__.png" align="middle" /> 
 
-<img src="images/success/vers_4_120K/emotion_trans_37_0__OK____.png" align="middle" /> <img src="images/success/vers_4_120K/emotion_trans_97_0.__OK__png.png" align="middle" />
+__Epoch 37__: <img src="images/success/vers_4_120K/emotion_trans_37_0__OK____.png" align="middle" /> 
+
+__Epoch 97__:<img src="images/success/vers_4_120K/emotion_trans_97_0.__OK__png.png" align="middle" />
 
 ## Experiment Log
 
