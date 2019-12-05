@@ -99,7 +99,7 @@ It takes ~1 day on a AWS p3.2xlarge.
 
 ## 120K Train Images 
 
-It takes ~4 days on a AWS p3.2xlarge. 
+It takes ~5 days (120 epochs) on a AWS p3.2xlarge. 
 
 <img src="images/success/vers_4_120K/au_edition_119_0_OK_.png" align="middle" /> 
 
