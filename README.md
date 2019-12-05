@@ -97,7 +97,7 @@ It takes ~1 day on a AWS p3.2xlarge.
 
 <img src="images/success/vers_4_60K/translat_47_20_____OK_____.png" align="middle" />   <img src="images/success/vers_4_60K/reconstr_136_2000.png.png" align="middle" /> 
 
-## 120K Train Images 
+## 120K Train Images + measure of Frechet Inception Distance every 1000 batches 
 
 It takes ~5 days (120 epochs) on a AWS p3.2xlarge. 
 
