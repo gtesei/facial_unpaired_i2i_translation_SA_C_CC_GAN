@@ -7,6 +7,8 @@ import torch
 import functools
 
 import datetime
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import sys
 from data_loader import *
@@ -77,6 +79,17 @@ class C_CC_GAN():
 #                                                                           "AU17_c"	,  "AU20_c"	, "AU23_c",	"AU25_c", 
 #                                                                           "AU26_c" ,  "AU45_c"], 
                                                             max_images=train_size)
+        self.data_loader_c = InMemoryDataLoader(dataset_name='EmotioNet',
+                                                            img_res=(self.img_rows, self.img_cols,self.channels), 
+                                                            root_data_path=self.root_data_path,
+                                                            normalize=True,
+                                                           csv_columns = ['frame', "AU01_c" , "AU02_c"	 , "AU04_c", 
+                                                                          "AU05_c", "AU06_c",	 "AU07_c", "AU09_c", 	 
+                                                                          "AU10_c",  "AU12_c",  "AU14_c", "AU15_c", 
+                                                                          "AU17_c"	,  "AU20_c"	, "AU23_c",	"AU25_c", 
+                                                                          "AU26_c" ,  "AU45_c"], 
+                                                            max_images=train_size)
+
         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> N. images loaded::",len(self.data_loader.lab_vect),"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
         #optimizer = Adam(self.adam_lr, self.adam_beta_1, self.adam_beta_2) 
         
@@ -265,8 +278,8 @@ class C_CC_GAN():
                 zs = self.g.encode(imgs)
                 for em in emotions:
                     print("****",em,"****")
-                    idx = self.a2e.get_idx(self.data_loader.lab_vect,emotion=em)
-                    images = self.data_loader.img_vect[idx.squeeze()]
+                    idx = self.a2e.get_idx(self.data_loader_c.lab_vect,emotion=em)
+                    images = self.data_loader_c.img_vect[idx.squeeze()]
                     images = images[0:sample_size]
                     #
                     au_em = self.a2e.emotion2aus(em,sample_size)
