@@ -335,8 +335,8 @@ class C_CC_GAN():
             transl_ = self.g.decode(zs,des_au_1)
             
             ## save reconstraction 
-            if not os.path.exists('log_images'):
-                os.makedirs('log_images')
+            if not os.path.exists('plot_images'):
+                os.makedirs('plot_images')
             #plot reconstr_   
             reconstr_ = reconstr_.cpu().detach().numpy()
             reconstr_ = np.transpose(reconstr_,(0,2,3,1))
@@ -344,7 +344,7 @@ class C_CC_GAN():
                 warnings.simplefilter("ignore")
                 plot_grid(np.concatenate([imgs, reconstr_]), 
                           row_titles=None, 
-                          col_titles=["Orig.[ep:%d]" % (epoch),'Reconstr.'],
+                          col_titles=["Orig.[n_samp:%d]" % (n_samp),'Reconstr.'],
                           nrow = 1,ncol = 2,
                           save_filename="plot_images/reconstr_%d_%d.png" % (n_samp, 1))
 
@@ -355,7 +355,7 @@ class C_CC_GAN():
                 warnings.simplefilter("ignore")
                 plot_grid(np.concatenate([imgs, transl_]), 
                           row_titles=None, 
-                          col_titles=["Orig.[ep:%d]" % (epoch),'Transl.'],
+                          col_titles=["Orig.[n_samp:%d]" % (n_samp),'Transl.'],
                           nrow = 1,ncol = 2,
                           save_filename="plot_images/translat_%d_%d.png" % (n_samp, 2))
             #### AU 
@@ -444,7 +444,7 @@ if __name__ == '__main__':
     root_data_path = args.root_data_path
     gan = C_CC_GAN(
         root_data_path = root_data_path,
-        train_size = args.train_size, 
+        train_size = -1, 
         AU_num=17,
         lambda_cl=args.lambda_cl,lambda_cyc=args.lambda_cyc,
         loss_type=args.loss_type,
