@@ -162,7 +162,8 @@ class InMemoryDataLoader():
                 
             ##
             self.lab_vect = np.concatenate(lab_vect_list,axis=0)
-            self.lab_vect = self.lab_vect / self.lab_vect.max()
+            #self.lab_vect = self.lab_vect / self.lab_vect.max()
+            self.lab_vect = np.where(np.max(self.lab_vect, axis=0)==0, self.lab_vect, self.lab_vect*1./np.max(self.lab_vect, axis=0))
             self.img_vect = np.concatenate(img_vect_list,axis=0)
             print("lab_vect::",lab_vect.shape,"  -- img_vect::",img_vect.shape)
         else:
@@ -201,11 +202,11 @@ if __name__ == '__main__':
                             #path_csv=csv_path,
                             #path_image_dir=img_path, 
                             root_data_path=root_data_path, 
-                            csv_columns = ['frame', "AU01_c" , "AU02_c"	 , "AU04_c", 
-                                                                           "AU05_c", "AU06_c",	 "AU07_c", "AU09_c", 	 
-                                                                           "AU10_c",  "AU12_c",  "AU14_c", "AU15_c", 
-                                                                           "AU17_c"	,  "AU20_c"	, "AU23_c",	"AU25_c", 
-                                                                           "AU26_c" ,  "AU45_c"], 
+#                            csv_columns = ['frame', "AU01_c" , "AU02_c"	 , "AU04_c", 
+#                                                                           "AU05_c", "AU06_c",	 "AU07_c", "AU09_c", 	 
+#                                                                           "AU10_c",  "AU12_c",  "AU14_c", "AU15_c", 
+#                                                                           "AU17_c"	,  "AU20_c"	, "AU23_c",	"AU25_c", 
+#                                                                           "AU26_c" ,  "AU45_c"], 
                             max_images=12)
     ## 
     print(dl.gen_rand_cond(batch_size=2).shape)
@@ -234,7 +235,7 @@ if __name__ == '__main__':
         plot_grid(batch_images,
                   #row_titles=[0,.33],
                   col_titles=_labels,
-                  nrow = 1,ncol = 8,save_filename=None)
+                  nrow = 1,ncol = 7,save_filename=None)
         break 
     joy = a2e.emotion2aus('joy',1).reshape(17)
     dl.lab_vect[dl.lab_vect==a2e.emotion2aus('joy',1)]
