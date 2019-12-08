@@ -73,23 +73,12 @@ class C_CC_GAN():
                                                             img_res=(self.img_rows, self.img_cols,self.channels), 
                                                             root_data_path=self.root_data_path,
                                                             normalize=True,
-#                                                            csv_columns = ['frame', "AU01_c" , "AU02_c"	 , "AU04_c", 
-#                                                                           "AU05_c", "AU06_c",	 "AU07_c", "AU09_c", 	 
-#                                                                           "AU10_c",  "AU12_c",  "AU14_c", "AU15_c", 
-#                                                                           "AU17_c"	,  "AU20_c"	, "AU23_c",	"AU25_c", 
-#                                                                           "AU26_c" ,  "AU45_c"], 
+                                                            csv_columns = ['frame', "AU01_c" , "AU02_c"	 , "AU04_c", 
+                                                                           "AU05_c", "AU06_c",	 "AU07_c", "AU09_c", 	 
+                                                                           "AU10_c",  "AU12_c",  "AU14_c", "AU15_c", 
+                                                                           "AU17_c"	,  "AU20_c"	, "AU23_c",	"AU25_c", 
+                                                                           "AU26_c" ,  "AU45_c"], 
                                                             max_images=train_size)
-        self.data_loader_c = InMemoryDataLoader(dataset_name='EmotioNet',
-                                                            img_res=(self.img_rows, self.img_cols,self.channels), 
-                                                            root_data_path=self.root_data_path,
-                                                            normalize=True,
-                                                           csv_columns = ['frame', "AU01_c" , "AU02_c"	 , "AU04_c", 
-                                                                          "AU05_c", "AU06_c",	 "AU07_c", "AU09_c", 	 
-                                                                          "AU10_c",  "AU12_c",  "AU14_c", "AU15_c", 
-                                                                          "AU17_c"	,  "AU20_c"	, "AU23_c",	"AU25_c", 
-                                                                          "AU26_c" ,  "AU45_c"], 
-                                                            max_images=train_size)
-
         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> N. images loaded::",len(self.data_loader.lab_vect),"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
         #optimizer = Adam(self.adam_lr, self.adam_beta_1, self.adam_beta_2) 
         
@@ -278,8 +267,8 @@ class C_CC_GAN():
                 zs = self.g.encode(imgs)
                 for em in emotions:
                     print("****",em,"****")
-                    idx = self.a2e.get_idx(self.data_loader_c.lab_vect,emotion=em)
-                    images = self.data_loader_c.img_vect[idx.squeeze()]
+                    idx = self.a2e.get_idx(self.data_loader.lab_vect,emotion=em)
+                    images = self.data_loader.img_vect[idx.squeeze()]
                     images = images[0:sample_size]
                     #
                     au_em = self.a2e.emotion2aus(em,sample_size)
@@ -428,7 +417,7 @@ class C_CC_GAN():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train')
-    parser.add_argument('-lambda_cl', help='loss weight for cond. regress. loss', dest='lambda_cl', type=float, default=10)
+    parser.add_argument('-lambda_cl', help='loss weight for cond. regress. loss', dest='lambda_cl', type=float, default=100)
     parser.add_argument('-lambda_cyc', help='reconstr. loss weight', dest='lambda_cyc', type=float, default=10)
     parser.add_argument('-loss_type', help='loss type [loss_nonsaturating] ', dest='loss_type', type=str, default='loss_wasserstein_gp')
     parser.add_argument('-d_g_ratio', help='# train iterations of critic per each train iteration of generator', dest='d_g_ratio', type=int, default=1)

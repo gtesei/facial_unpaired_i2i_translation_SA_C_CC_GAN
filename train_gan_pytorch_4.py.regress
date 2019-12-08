@@ -7,6 +7,8 @@ import torch
 import functools
 
 import datetime
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import sys
 from data_loader import *
@@ -71,12 +73,23 @@ class C_CC_GAN():
                                                             img_res=(self.img_rows, self.img_cols,self.channels), 
                                                             root_data_path=self.root_data_path,
                                                             normalize=True,
-                                                            csv_columns = ['frame', "AU01_c" , "AU02_c"	 , "AU04_c", 
-                                                                           "AU05_c", "AU06_c",	 "AU07_c", "AU09_c", 	 
-                                                                           "AU10_c",  "AU12_c",  "AU14_c", "AU15_c", 
-                                                                           "AU17_c"	,  "AU20_c"	, "AU23_c",	"AU25_c", 
-                                                                           "AU26_c" ,  "AU45_c"], 
+#                                                            csv_columns = ['frame', "AU01_c" , "AU02_c"	 , "AU04_c", 
+#                                                                           "AU05_c", "AU06_c",	 "AU07_c", "AU09_c", 	 
+#                                                                           "AU10_c",  "AU12_c",  "AU14_c", "AU15_c", 
+#                                                                           "AU17_c"	,  "AU20_c"	, "AU23_c",	"AU25_c", 
+#                                                                           "AU26_c" ,  "AU45_c"], 
                                                             max_images=train_size)
+        self.data_loader_c = InMemoryDataLoader(dataset_name='EmotioNet',
+                                                            img_res=(self.img_rows, self.img_cols,self.channels), 
+                                                            root_data_path=self.root_data_path,
+                                                            normalize=True,
+                                                           csv_columns = ['frame', "AU01_c" , "AU02_c"	 , "AU04_c", 
+                                                                          "AU05_c", "AU06_c",	 "AU07_c", "AU09_c", 	 
+                                                                          "AU10_c",  "AU12_c",  "AU14_c", "AU15_c", 
+                                                                          "AU17_c"	,  "AU20_c"	, "AU23_c",	"AU25_c", 
+                                                                          "AU26_c" ,  "AU45_c"], 
+                                                            max_images=train_size)
+
         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> N. images loaded::",len(self.data_loader.lab_vect),"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
         #optimizer = Adam(self.adam_lr, self.adam_beta_1, self.adam_beta_2) 
         
@@ -265,8 +278,8 @@ class C_CC_GAN():
                 zs = self.g.encode(imgs)
                 for em in emotions:
                     print("****",em,"****")
-                    idx = self.a2e.get_idx(self.data_loader.lab_vect,emotion=em)
-                    images = self.data_loader.img_vect[idx.squeeze()]
+                    idx = self.a2e.get_idx(self.data_loader_c.lab_vect,emotion=em)
+                    images = self.data_loader_c.img_vect[idx.squeeze()]
                     images = images[0:sample_size]
                     #
                     au_em = self.a2e.emotion2aus(em,sample_size)
@@ -424,7 +437,7 @@ if __name__ == '__main__':
     parser.add_argument('-adam_beta_2', help='Adam beta-2', dest='adam_beta_2', type=float, default=0.999)
     parser.add_argument('-epochs', help='N. epochs', dest='epochs', type=int, default=170)
     parser.add_argument('-batch_size', help='batch size', dest='batch_size', type=int, default=32)
-    parser.add_argument('-sample_interval', help='sample interval', dest='sample_interval', type=int, default=1000)
+    parser.add_argument('-sample_interval', help='sample interval', dest='sample_interval', type=int, default=4000)
     parser.add_argument('-save_interval', dest='save_interval', type=int, default=1000)
     parser.add_argument('-root_data_path', help='base file path', dest='root_data_path', type=str, default='datasets')
     parser.add_argument('-train_size', help='train size [-1 for all train data]', dest='train_size', type=int, default=-1)
