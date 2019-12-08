@@ -97,7 +97,7 @@ It takes ~1 day on a AWS p3.2xlarge.
 
 <img src="images/success/vers_4_60K/translat_47_20_____OK_____.png" align="middle" />   <img src="images/success/vers_4_60K/reconstr_136_2000.png.png" align="middle" /> 
 
-## 120K Train Images + measure of Frechet Inception Distance every 1000 batches 
+## 120K Train Images + measure of Frechet Inception Distance every 1000 batches [lambda_cl = lambda_cyc = 10]
 
 It takes ~5 days (120 epochs) on a AWS p3.2xlarge. 
 
@@ -113,6 +113,12 @@ It takes ~5 days (120 epochs) on a AWS p3.2xlarge.
 __Epoch 37__: <img src="images/success/vers_4_120K/emotion_trans_37_0__OK____.png" align="middle" /> 
 
 __Epoch 97__:<img src="images/success/vers_4_120K/emotion_trans_97_0.__OK__png.png" align="middle" />
+
+#### [lambda_cl 100, lambda_cyc = 10]
+
+<img src="images/success/vers_4_120K/emotion_trans_27_0__OK__l100.png" align="middle" /> 
+
+<img src="images/success/vers_4_120K/emotion_trans_33_0__OK__bin_l100.png" align="middle" /> 
 
 ## Experiment Log
 
