@@ -114,7 +114,7 @@ __Epoch 37__: <img src="images/success/vers_4_120K/emotion_trans_37_0__OK____.pn
 
 __Epoch 97__:<img src="images/success/vers_4_120K/emotion_trans_97_0.__OK__png.png" align="middle" />
 
-#### [lambda_cl 100, lambda_cyc = 10]
+#### lambda_cl = 100, lambda_cyc = 10
 
 <img src="images/success/vers_4_120K/emotion_trans_27_0__OK__l100.png" align="middle" /> 
 
