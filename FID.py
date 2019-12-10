@@ -2,7 +2,8 @@
 """
 https://github.com/mseitzer/pytorch-fid/blob/master/fid_score.py
 """
-
+import matplotlib
+matplotlib.use('agg')
 import torch
 from torch import nn
 from torchvision.models import inception_v3
@@ -335,23 +336,28 @@ if __name__ == "__main__":
 	            images2 = images[int(len(images)/2):]
 	        images1_dict[emotion] = images1
 	        images2_dict[emotion] = images2
-	    else:
-	    	images1 , images2 = images1_dict[emotion] , images2_dict[emotion]
-	    for emotion2 in emolist:
-	    	if emotion2 not in images1_dict.keys():
-		        idx = a2e.get_idx(dl.lab_vect,emotion=emotion)
-		        images = dl.img_vect[idx.squeeze()]
-		        if len(images) > 2 * options.max_img:
-		            images1_2 = images[0:options.max_img]
-		            images2_2 = images[options.max_img:2*options.max_img]
-		        else:
-		            images1_2 = images[:int(len(images)/2)]
-		            images2_2 = images[int(len(images)/2):]
-		        images1_dict[emotion] = images1_2
-		        images2_dict[emotion] = images2_2
-		    else:
-		    	images1_2 , images2_2 = images1_dict[emotion] , images2_dict[emotion]
-		    print(emotion,"-->",emotion2,":: images1",images1.shape,"     images2_2",images2_2.shape)
-	        fid_value = calculate_fid(images1, images2_2, options.use_multiprocessing, options.batch_size)
-	        print(emotion,"-->",emotion2,"  FID::,"fid_value)
-	        torch.cuda.empty_cache()
+        else:
+            images1 , images2 = images1_dict[emotion] , images2_dict[emotion]
+        for emotion2 in emolist:
+            if emotion2 not in images1_dict.keys():
+                idx = a2e.get_idx(dl.lab_vect,emotion=emotion2)
+                images = dl.img_vect[idx.squeeze()]
+                if len(images) > 2 * options.max_img:
+                    images1_2 = images[0:options.max_img]
+                    images2_2 = images[options.max_img:2*options.max_img]
+                else:
+                    images1_2 = images[:int(len(images)/2)]
+                    images2_2 = images[int(len(images)/2):]
+                images1_dict[emotion2] = images1_2
+                images2_dict[emotion2] = images2_2
+            else:
+                images1_2 , images2_2 = images1_dict[emotion2] , images2_dict[emotion2]
+            print(emotion,"-->",emotion2,":: images1",images1.shape,"     images2_2",images2_2.shape)
+            fid_value = calculate_fid(images1, images2_2, options.use_multiprocessing, options.batch_size)
+            print(emotion,"-->",emotion2,"  FID::",fid_value)
+            torch.cuda.empty_cache()
+        ###
+        idx = np.random.choice(dl.lab_vect.shape[0],size=options.max_img)
+        rand_images = dl.img_vect[idx.squeeze()]
+        fid_value = calculate_fid(images1, rand_images, options.use_multiprocessing, options.batch_size)
+        print(emotion,"--> random sample FID::",fid_value)
